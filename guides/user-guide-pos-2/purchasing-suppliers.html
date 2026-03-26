@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suppliers - jPOS User Guide</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>jPOS 2.x</h1>
+                <span class="version">User Guide v2.0</span>
+            </div>
+            <nav class="main-nav">
+                <a href="home.html">Home</a>
+                <a href="getting-started.html">Getting Started</a>
+                <a href="inventory.html">Inventory</a>
+                <a href="purchasing.html">Purchasing</a>
+                <a href="sales.html">Sales</a>
+                <a href="reports.html">Reports</a>
+                <a href="faq.html">FAQ</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <h3>Purchasing & Stock</h3>
+                <ul>
+                    <li><a href="purchasing-por.html">Purchase Orders (POR)</a></li>
+                    <li><a href="purchasing-grn.html">Goods Received Notes (GRN)</a></li>
+                    <li><a href="purchasing-grn-returns.html">GRN Returns</a></li>
+                    <li><a href="purchasing-expenses.html">Expenses</a></li>
+                    <li><a href="purchasing-suppliers.html" class="active">Suppliers</a></li>
+                    <li><a href="purchasing-transfer-request.html">Product Transfer Request</a></li>
+                    <li><a href="purchasing-release-notes.html">Product Release Notes</a></li>
+                    <li><a href="purchasing-stock-return.html">Stock Return</a></li>
+                </ul>
+                <h3>Other Sections</h3>
+                <ul>
+                    <li><a href="inventory.html">Inventory</a></li>
+                    <li><a href="sales.html">Sales Management</a></li>
+                    <li><a href="reports.html">Reports & Analytics</a></li>
+                    <li><a href="faq.html">FAQ & Support</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <section id="suppliers" class="section">
+                <h2>Suppliers</h2>
+                <p>Manage your supplier database for streamlined purchasing.</p>
+
+                <div class="step">
+                    <h4>Adding a Supplier</h4>
+                    <ol>
+                        <li>Go to <strong>Purchasing & Stock → Suppliers</strong></li>
+                        <li>Click <strong>"Add Supplier"</strong></li>
+                        <li>Enter supplier details:
+                            <ul>
+                                <li><strong>Supplier Name:</strong> Company name (required)</li>
+                                <li><strong>Email:</strong> Email address</li>
+                                <li><strong>Phone:</strong> Contact number</li>
+                                <li><strong>Address:</strong> Physical address</li>
+                                <li><strong>Status:</strong> Active or Inactive</li>
+                            </ul>
+                        </li>
+                        <li>Save the supplier</li>
+                    </ol>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/suppliers-create.png" alt="Suppliers" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-img&quot;>📸 Screenshot: suppliers.png<br><small>Place your suppliers screenshot here</small></div>'">
+                    </div>
+                </div>
+            </section>
+
+            <section class="navigation-footer">
+                <div class="nav-links">
+                    <a href="purchasing-expenses.html" class="nav-link">← Back: Expenses</a>
+                    <a href="purchasing-transfer-request.html" class="nav-link">Next: Product Transfer Request →</a>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 jPOS 2.x. All rights reserved. | Version 2.0 | Last Updated: December 2025</p>
+        </div>
+    </footer>
+</body>
+</html>

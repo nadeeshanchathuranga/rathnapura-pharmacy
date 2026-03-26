@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screenshot Capture Helper - jPOS 2.x</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #2d3748;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+        .intro {
+            background: #edf2f7;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 2rem;
+            border-left: 4px solid #4299e1;
+        }
+        .checklist {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        .category {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+        .category:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .category h3 {
+            color: #2d3748;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #4299e1;
+        }
+        .screenshot-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            background: white;
+            border-radius: 0.375rem;
+            border: 1px solid #e2e8f0;
+        }
+        .screenshot-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 1rem;
+            cursor: pointer;
+        }
+        .screenshot-item label {
+            cursor: pointer;
+            flex: 1;
+            font-family: 'Courier New', monospace;
+            color: #4a5568;
+        }
+        .screenshot-item.checked {
+            background: #c6f6d5;
+            border-color: #48bb78;
+        }
+        .screenshot-item.checked label {
+            text-decoration: line-through;
+            color: #2f855a;
+        }
+        .priority {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        .priority-high {
+            background: #fed7d7;
+            color: #c53030;
+        }
+        .priority-medium {
+            background: #feebc8;
+            color: #c05621;
+        }
+        .priority-low {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #edf2f7;
+            border-radius: 1rem;
+            overflow: hidden;
+            margin: 2rem 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #38a169);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            min-width: 150px;
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            display: block;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .instructions {
+            background: #fffaf0;
+            border: 2px solid #fbd38d;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+        .instructions h3 {
+            color: #744210;
+            margin-bottom: 1rem;
+        }
+        .instructions ol {
+            margin-left: 1.5rem;
+        }
+        .instructions li {
+            margin: 0.5rem 0;
+            color: #744210;
+        }
+        .button {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 0.5rem;
+            transition: all 0.3s;
+        }
+        .button:hover {
+            background: #3182ce;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .button-danger {
+            background: #f56565;
+        }
+        .button-danger:hover {
+            background: #e53e3e;
+        }
+        .actions {
+            text-align: center;
+            margin: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📸 jPOS 2.x Screenshot Capture Helper</h1>
+        
+        <div class="intro">
+            <p><strong>Welcome!</strong> This helper tool will guide you through capturing all required screenshots for the jPOS user guide.</p>
+            <p style="margin-top: 0.5rem;">Check off each screenshot as you capture it. Your progress is automatically saved in your browser.</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <span class="stat-number" id="totalCount">0</span>
+                <span class="stat-label">Total Screenshots</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="completedCount">0</span>
+                <span class="stat-label">Completed</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="remainingCount">0</span>
+                <span class="stat-label">Remaining</span>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar" style="width: 0%">0%</div>
+        </div>
+
+        <div class="instructions">
+            <h3>📝 Quick Instructions</h3>
+            <ol>
+                <li>Navigate to the page you want to screenshot in jPOS</li>
+                <li>Press <strong>Win + Shift + S</strong> (Windows) or use your screenshot tool</li>
+                <li>Select the area and save the screenshot</li>
+                <li>Save it to: <code>public/user-guide/screenshots/</code></li>
+                <li>Use the exact filename shown below</li>
+                <li>Check the box when done</li>
+            </ol>
+        </div>
+
+        <div class="fullpage-options">
+            <div class="category">
+                <span class="priority priority-high">Recommended</span>
+                <h3>📷 Full-Page Dashboard Screenshot (Chrome DevTools)</h3>
+                <ol>
+                    <li>Open the dashboard page in a new tab.</li>
+                    <li>Press <strong>Ctrl + Shift + I</strong> to open DevTools.</li>
+                    <li>Press <strong>Ctrl + Shift + P</strong> to open the Command Palette.</li>
+                    <li>Type <strong>Capture full size screenshot</strong> and press Enter.</li>
+                    <li>Save the image as <code>dashboard.png</code> in <code>public/user-guide/screenshots/</code>.</li>
+                </ol>
+            </div>
+
+            <div class="category">
+                <span class="priority priority-medium">Alternate</span>
+                <h3>🔖 Bookmarklet: One-Click Full Page Capture</h3>
+                <p>Drag the button below to your bookmarks bar. Open the dashboard, then click the bookmark.</p>
+                <div class="actions">
+                    <a class="button" href="javascript:(function(){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';s.onload=function(){html2canvas(document.body,{useCORS:true,windowWidth:document.documentElement.scrollWidth,windowHeight:document.documentElement.scrollHeight}).then(function(canvas){var link=document.createElement('a');link.download='dashboard.png';link.href=canvas.toDataURL('image/png');link.click();});};document.body.appendChild(s);})();">Drag me: Full Page Screenshot</a>
+                </div>
+                <p>If the page is very long, you can temporarily zoom out:</p>
+                <div class="actions">
+                    <a class="button" href="javascript:(function(){document.body.style.zoom='67%';alert('Zoom set to 67%. Capture now, then reset.');})();">Set Zoom 67%</a>
+                    <a class="button button-danger" href="javascript:(function(){document.body.style.zoom='100%';alert('Zoom reset to 100%.');})();">Reset Zoom</a>
+                </div>
+            </div>
+
+            <div class="category">
+                <span class="priority priority-low">Tools</span>
+                <h3>🧩 Extensions (Full Page)</h3>
+                <ul>
+                    <li>Awesome Screenshot — Full page capture, annotate, export</li>
+                    <li>Nimbus Screenshot — Capture long pages and edit</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="checklist" id="checklist">
+            <!-- Will be populated by JavaScript -->
+        </div>
+
+        <div class="actions">
+            <button class="button" onclick="resetProgress()">🔄 Reset All</button>
+            <button class="button" onclick="exportProgress()">💾 Export Progress</button>
+        </div>
+    </div>
+
+    <script>
+        const screenshots = {
+            "Authentication & Dashboard": {
+                priority: "high",
+                items: [
+                    "login-page.png",
+                    "dashboard.png"
+                ]
+            },
+            "Inventory Management": {
+                priority: "high",
+                items: [
+                    "product-list.png",
+                    "add-product.png",
+                    "categories.png",
+                    "brands.png",
+                    "units.png"
+                ]
+            },
+            "Sales Module": {
+                priority: "high",
+                items: [
+                    "pos-interface.png",
+                    "sales-invoices.png",
+                    "customers.png"
+                ]
+            },
+            "Purchasing Module": {
+                priority: "medium",
+                items: [
+                    "grn-create.png",
+                    "grn-returns.png",
+                    "suppliers.png"
+                ]
+            },
+            "Stock Transfers": {
+                priority: "medium",
+                items: [
+                    "transfer-request.png",
+                    "prn.png"
+                ]
+            },
+            "Reports": {
+                priority: "high",
+                items: [
+                    "sales-report.png",
+                    "stock-report.png",
+                    "movement-report.png",
+                    "expense-report.png"
+                ]
+            },
+            "Settings": {
+                priority: "low",
+                items: [
+                    "company-settings.png",
+                    "app-settings.png",
+                    "bill-settings.png"
+                ]
+            }
+        };
+
+        function loadProgress() {
+            const saved = localStorage.getItem('jpos-screenshot-progress');
+            return saved ? JSON.parse(saved) : {};
+        }
+
+        function saveProgress(progress) {
+            localStorage.setItem('jpos-screenshot-progress', JSON.stringify(progress));
+        }
+
+        function renderChecklist() {
+            const checklist = document.getElementById('checklist');
+            const progress = loadProgress();
+            let html = '';
+
+            for (const [category, data] of Object.entries(screenshots)) {
+                html += `<div class="category">`;
+                html += `<span class="priority priority-${data.priority}">Priority: ${data.priority.toUpperCase()}</span>`;
+                html += `<h3>${category}</h3>`;
+                
+                data.items.forEach(item => {
+                    const checked = progress[item] || false;
+                    const checkedClass = checked ? 'checked' : '';
+                    html += `
+                        <div class="screenshot-item ${checkedClass}">
+                            <input type="checkbox" id="${item}" ${checked ? 'checked' : ''} onchange="toggleItem('${item}')">
+                            <label for="${item}">${item}</label>
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`;
+            }
+
+            checklist.innerHTML = html;
+            updateStats();
+        }
+
+        function toggleItem(filename) {
+            const progress = loadProgress();
+            const checkbox = document.getElementById(filename);
+            progress[filename] = checkbox.checked;
+            saveProgress(progress);
+            
+            const item = checkbox.parentElement;
+            if (checkbox.checked) {
+                item.classList.add('checked');
+            } else {
+                item.classList.remove('checked');
+            }
+            
+            updateStats();
+        }
+
+        function updateStats() {
+            const progress = loadProgress();
+            const completed = Object.values(progress).filter(v => v).length;
+            
+            let total = 0;
+            for (const data of Object.values(screenshots)) {
+                total += data.items.length;
+            }
+            
+            const remaining = total - completed;
+            const percentage = Math.round((completed / total) * 100);
+
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('completedCount').textContent = completed;
+            document.getElementById('remainingCount').textContent = remaining;
+            document.getElementById('progressBar').style.width = percentage + '%';
+            document.getElementById('progressBar').textContent = percentage + '%';
+        }
+
+        function resetProgress() {
+            if (confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
+                localStorage.removeItem('jpos-screenshot-progress');
+                renderChecklist();
+            }
+        }
+
+        function exportProgress() {
+            const progress = loadProgress();
+            const completed = Object.keys(progress).filter(k => progress[k]);
+            const remaining = [];
+            
+            for (const data of Object.values(screenshots)) {
+                data.items.forEach(item => {
+                    if (!progress[item]) {
+                        remaining.push(item);
+                    }
+                });
+            }
+
+            const report = `jPOS Screenshot Progress Report
+Generated: ${new Date().toLocaleString()}
+
+Completed Screenshots (${completed.length}):
+${completed.map(s => '✓ ' + s).join('\n')}
+
+Remaining Screenshots (${remaining.length}):
+${remaining.map(s => '□ ' + s).join('\n')}
+`;
+
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'screenshot-progress.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize
+        renderChecklist();
+    </script>
+</body>
+</html>

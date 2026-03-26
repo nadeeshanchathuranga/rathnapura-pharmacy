@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier Payment - jPOS User Guide</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>jPOS 2.x</h1>
+                <span class="version">User Guide v2.0</span>
+            </div>
+            <nav class="main-nav">
+                <a href="home.html">Home</a>
+                <a href="getting-started.html">Getting Started</a>
+                <a href="inventory.html">Inventory</a>
+                <a href="purchasing.html">Purchasing</a>
+                <a href="sales.html">Sales</a>
+                <a href="reports.html">Reports</a>
+                <a href="faq.html">FAQ</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <h3>Purchasing & Stock</h3>
+                <ul>
+                    <li><a href="purchasing-por.html">Purchase Orders (POR)</a></li>
+                    <li><a href="purchasing-grn.html">Goods Received Notes (GRN)</a></li>
+                    <li><a href="purchasing-grn-returns.html">GRN Returns</a></li>
+                    <li><a href="purchasing-expenses.html" class="active">Expenses</a></li>
+                    <li><a href="purchasing-suppliers.html">Suppliers</a></li>
+                    <li><a href="purchasing-transfer-request.html">Product Transfer Request</a></li>
+                    <li><a href="purchasing-release-notes.html">Product Release Notes</a></li>
+                    <li><a href="purchasing-stock-return.html">Stock Return</a></li>
+                </ul>
+                <h3>Other Sections</h3>
+                <ul>
+                    <li><a href="inventory.html">Inventory</a></li>
+                    <li><a href="sales.html">Sales Management</a></li>
+                    <li><a href="reports.html">Reports & Analytics</a></li>
+                    <li><a href="faq.html">FAQ & Support</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <section id="expenses" class="section">
+                <h2>Expenses</h2>
+                <p>Track business expenses related to inventory and operations.</p>
+
+                <div class="step">
+                        <h4>Creating an Expense</h4>
+                        <ol>
+                            <li>Navigate to <strong>Purchasing & Stock → Expenses</strong></li>
+                            <li>Click <strong>"Create New Expense"</strong> or <strong>"Add Expense"</strong></li>
+                            <li>Fill in the expense details:
+                                <ul>
+                                    <li><strong>Supplier:</strong> Select the supplier related to this expense (if applicable)</li>
+                                    <li><strong>Date:</strong> Date when the expense occurred (required)</li>
+                                    <li><strong>Total Amount:</strong> Total expense amount in LKR (required)</li>
+                                    <li><strong>Paid:</strong> Amount already paid in LKR</li>
+                                    <li><strong>Balance(LKR):</strong> Remaining balance to be paid</li>
+                                    <li><strong>Amount(LKR):</strong> Payment amount being made (required)</li>
+                                    <li><strong>Payment Type:</strong> Payment method - Cash, Check, Bank Transfer, etc. (required)</li>
+                                </ul>
+                            </li>
+                            <li>Review all information for accuracy</li>
+                            <li>Click <strong>"Create Expense"</strong> to record the expense</li>
+                        </ol>
+
+                        <div class="screenshot-placeholder">
+                            <img src="screenshots/expenses-create.png" alt="Create Expense" onerror="this.parentElement.innerHTML='<div class=\'placeholder-img\'>📸 Screenshot: expenses-create.png<br><small>Place your create expense screenshot here</small></div>'">
+                        </div>
+                    </div>
+            </section>
+
+            <section class="navigation-footer">
+                <div class="nav-links">
+                    <a href="purchasing-grn-returns.html" class="nav-link">← Back: GRN Returns</a>
+                    <a href="purchasing-suppliers.html" class="nav-link">Next: Suppliers →</a>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 jPOS 2.x. All rights reserved. | Version 2.0 | Last Updated: December 2025</p>
+        </div>
+    </footer>
+</body>
+</html>

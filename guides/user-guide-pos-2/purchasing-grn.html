@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goods Received Notes (GRN) - jPOS User Guide</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>jPOS 2.x</h1>
+                <span class="version">User Guide v2.0</span>
+            </div>
+            <nav class="main-nav">
+                <a href="home.html">Home</a>
+                <a href="getting-started.html">Getting Started</a>
+                <a href="inventory.html">Inventory</a>
+                <a href="purchasing.html">Purchasing</a>
+                <a href="sales.html">Sales</a>
+                <a href="reports.html">Reports</a>
+                <a href="faq.html">FAQ</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <h3>Stores</h3>
+                <ul>
+                    <li><a href="purchasing-por.html">Purchase Orders (POR)</a></li>
+                    <li><a href="purchasing-grn.html" class="active">Goods Received Notes (GRN)</a></li>
+                    <li><a href="purchasing-grn-returns.html">GRN Returns</a></li>
+                    <li><a href="purchasing-expenses.html">Expenses</a></li>
+                    <li><a href="purchasing-suppliers.html">Suppliers</a></li>
+                    <li><a href="purchasing-transfer-request.html">Product Transfer Request</a></li>
+                    <li><a href="purchasing-release-notes.html">Product Release Notes</a></li>
+                    <li><a href="purchasing-stock-return.html">Stock Return</a></li>
+                </ul>
+                <h3>Other Sections</h3>
+                <ul>
+                    <li><a href="inventory.html">Inventory</a></li>
+                    <li><a href="sales.html">Sales Management</a></li>
+                    <li><a href="reports.html">Reports & Analytics</a></li>
+                    <li><a href="faq.html">FAQ & Support</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <section id="grn" class="section">
+                <h2>Goods Received Notes (GRN)</h2>
+                <p>Record all incoming stock to maintain accurate inventory levels.</p>
+
+                <div class="step">
+                        <h4>Creating a GRN</h4>
+                        <p>A Goods Received Note records products received from suppliers and automatically updates inventory stock levels in the system.</p>
+                        <ol>
+                            <li>Navigate to <strong>Purchasing & Stock → Goods Received Notes</strong></li>
+                            <li>Click <strong>"Create New GRN"</strong> or <strong>"Add New Goods Received Note"</strong></li>
+                            <li>Fill in the GRN header information:
+                                <ul>
+                                    <li><strong>GRN Number:</strong> Auto-generated unique identifier</li>
+                                    <li><strong>Supplier:</strong> Select the supplier providing the goods (required)</li>
+                                    <li><strong>GRN Date:</strong> Date goods were received (required)</li>
+                                    <li><strong>Purchase Order:</strong> Link to related POR</li>
+                                    <li><strong>Discount:</strong> Apply overall discount if applicable</li>
+                                    <li><strong>Tax:</strong> System calculates tax based on configured rates</li>
+                                    <li><strong>Remarks:</strong> Add notes or special instructions</li>
+                                </ul>
+                            </li>
+                            <li>Add products to the GRN table:
+                                <ul>
+                                    <li>After selecting a Purchase Order Number, products are <strong>automatically populated</strong> from that PO</li>
+                                    <li>When a PO is selected, you <strong>cannot add new products</strong> - only the PO items will appear in the table</li>
+                                    <li>You can only modify the received quantity for products already in the PO and remove the unnecessary products.</li>
+                                    <li>Enter received quantity (in purchase units)</li>
+                                    <li>Verify unit price is correct</li>
+                                    <li>System calculates line totals automatically</li>
+                                </ul>
+                            </li>
+                            <li>Review all information for accuracy</li>
+                            <li>Click <strong>"Create GRN"</strong> to finalize and update inventory</li>
+                        </ol>
+
+                        <div class="screenshot-placeholder">
+                            <img src="screenshots/grn-create.png" alt="Create GRN" onerror="this.parentElement.innerHTML='<div class=\'placeholder-img\'>📸 Screenshot: grn-create.png<br><small>Place your GRN creation screenshot here</small></div>'">
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <h4>Viewing Goods Received Notes (GRN List)</h4>
+                        <p>The Goods Received Notes list displays all created GRNs with their details, status, and transaction history.</p>
+                        <ol>
+                            <li>Navigate to <strong>Purchasing & Stock → Goods Received Notes</strong></li>
+                            <li>The list displays the following information for each GRN:
+                                <ul>
+                                    <li><strong>GRN Number:</strong> Unique identifier for each goods receipt</li>
+                                    <li><strong>Supplier:</strong> The supplier who provided the goods</li>
+                                    <li><strong>Date:</strong> Date when goods were received</li>
+                                    <li><strong>Total Amount:</strong> Total value of all products in the receipt</li>
+                                    <li><strong>Discount:</strong> Discount amount applied to the receipt</li>
+                                    <li><strong>Tax:</strong> Tax amount applied to the receipt</li>
+                                    <li><strong>Status:</strong> Processing status of the GRN (Pending, Received, Processed, etc.)</li>
+                                    <li><strong>Actions:</strong> View details, Edit, Print, Delete</li>
+                                </ul>
+                            </li>
+                            <li>Click on any row or the <strong>"View"</strong> button to see detailed product information and receipts</li>
+                        </ol>
+
+                        <div class="screenshot-placeholder">
+                            <img src="screenshots/goodsreceivednote-list.png" alt="List of GRN" onerror="this.parentElement.innerHTML='<div class=\'placeholder-img\'>📸 Screenshot: goodsreceivednote-list.png<br><small>Place your GRN list screenshot here</small></div>'">
+                        </div>
+                    </div>
+                    <div class="note">
+                        <strong>Note:</strong>
+                        <ul>
+                            <li>When you delete a GRN, its status automatically changes to <em>Inactive</em> and the associated stock adjustments are reversed.</li>
+                        </ul>
+                    </div>
+            </section>
+
+            <section class="navigation-footer">
+                <div class="nav-links">
+                    <a href="purchasing-por.html" class="nav-link">← Back: Purchase Orders</a>
+                    <a href="purchasing-grn-returns.html" class="nav-link">Next: GRN Returns →</a>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 jPOS 2.x. All rights reserved. | Version 2.0 | Last Updated: December 2025</p>
+        </div>
+    </footer>
+</body>
+</html>

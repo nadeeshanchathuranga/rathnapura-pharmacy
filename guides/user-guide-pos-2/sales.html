@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Management - jPOS User Guide</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>jPOS 2.x</h1>
+                <span class="version">User Guide v2.0</span>
+            </div>
+            <nav class="main-nav">
+                <a href="home.html">Home</a>
+                <a href="getting-started.html">Getting Started</a>
+                <a href="inventory.html">Inventory</a>
+                <a href="purchasing.html">Purchasing</a>
+                <a href="sales.html">Sales</a>
+                <a href="reports.html">Reports</a>
+                <a href="faq.html">FAQ</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <h3>Sales</h3>
+                <ul>
+                    <li><a href="#customers">Customers</a></li>
+                    <li><a href="#discount">Discount</a></li>
+                    <li><a href="#taxes">Taxes</a></li>
+                    <li><a href="#sales">Sales</a></li>
+                    <li><a href="#product-returns">Product Returns</a></li>
+                </ul>
+                <h3>Other Sections</h3>
+                <ul>
+                    <li><a href="purchasing.html">Purchasing & Stock</a></li>
+                    <li><a href="reports.html">Reports & Analytics</a></li>
+                    <li><a href="faq.html">FAQ & Support</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <section class="section">
+                <h2>Sales Management</h2>
+                <p>Manage all your sales transactions, invoices, and customer relationships.</p>
+            </section>
+
+            <section id="customers" class="section">
+                <h3>Customers </h3>
+                <p>Fast checkout system with barcode scanning and multiple payment options.</p>
+
+                 <div class="step">
+                        <h4>Adding a Customer</h4>
+                        <ol>
+                            <li>Go to <strong>Sales → Customers</strong></li>
+                            <li>Click <strong>"Add Customer"</strong></li>
+                            <li>Enter customer details (name, phone, email, address)</li>
+                            <li>Save the customer</li>
+                        </ol>
+
+                        <div class="screenshot-placeholder">
+                            <img src="screenshots/customers.png" alt="Customer Management" onerror="this.parentElement.innerHTML='<div class=\'placeholder-img\'>📸 Screenshot: customers.png<br><small>Place your customers screenshot here</small></div>'">
+                        </div>
+                    </div>
+            </section>
+
+            <section id="discount" class="section">
+                <h3>Discount</h3>
+                <p>View, edit, and manage all discount from this section.</p>
+
+                <div class="step">
+                    <h4>Discounts</h4>
+                    <ol>
+                        <li>Go to <strong>Sales → Discount</strong></li>
+                        <li>View discount list with:
+                            <ul>
+                                <li><strong>Discount Name:</strong> Name or code of the discount</li>
+                                <li><strong>Type:</strong> Percentage, Fixed Amount, or Buy X Get Y</li>
+                                <li><strong>Value:</strong> Discount value (e.g., 10% or Rs. 500)</li>
+                                <li><strong>Total:</strong> Total discount amount applied</li>
+                                <li><strong>Start Date:</strong> When the discount becomes active</li>
+                                <li><strong>End Date:</strong> When the discount expires</li>
+                                <li><strong>Status:</strong> Active, Scheduled, or Expired</li>
+                            </ul>
+                        </li>
+                    </ol>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/discount-create.png" alt="Sales Invoices" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-img&quot;>📸 Screenshot: sales-invoices.png<br><small>Place your sales invoices screenshot here</small></div>'">
+                    </div>
+                </div>
+
+                <!-- <div class="step">
+                    <h4>Viewing Discounts</h4>
+                    <ol>
+                        <li>Click <strong>"Create Invoice"</strong></li>
+                        <li>Select customer</li>
+                        <li>Add products and quantities</li>
+                        <li>Apply tax and discounts</li>
+                        <li>Set payment terms</li>
+                        <li>Save and print</li>
+                    </ol>
+                </div> -->
+            </section>
+
+            <section id="taxes" class="section">
+                <h3>Tax Management</h3>
+                <p>Maintain a database of your customers for better CRM.</p>
+
+                <div class="step">
+                    <h4>Adding a Tax</h4>
+                    <ol>
+                        <li>Go to <strong>Sales → Taxes</strong></li>
+                        <li>Click <strong>"Add Tax"</strong></li>
+                        <li>Enter tax details:
+                            <ul>
+                                <li><strong>Tax Name:</strong> Tax name (required)</li>
+                                <li><strong>Percentage:</strong> Tax percentage</li>
+                                <li><strong>Type:</strong> Tax type</li>
+                                <li><strong>Status:</strong> Tax status</li>
+                            </ul>
+                        </li>
+                        <li>Save the tax</li>
+                    </ol>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/tax.png" alt="Tax" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-img&quot;>📸 Screenshot: tax-management.png<br><small>Place your tax management screenshot here</small></div>'">
+                    </div>
+                </div>
+            </section>
+
+            <section id="sales" class="section">
+                <h3>Creating a New Sale / Bill</h3>
+                <p>Process sales transactions with barcode scanning, product selection, and multiple payment options.</p>
+
+                <div class="step">
+                    <h4>Step-by-Step Sale Process</h4>
+                    <ol>
+                        <li>Navigate to <strong>Sales → New Sale</strong> or <strong>Point of Sale</strong></li>
+                        <li>You will see the New Sale/Bill screen with:
+                            <ul>
+                                <li><strong>Scan Barcode:</strong> Input field for quick product entry</li>
+                                <li><strong>Customer & Date:</strong> Select customer and date</li>
+                                <li><strong>Price Type:</strong> Choose between Retail or Wholesale pricing</li>
+                                <li><strong>Add Products:</strong> Browse and select products</li>
+                            </ul>
+                        </li>
+                        <li>Add products to cart by:
+                            <ul>
+                                <li>Scanning barcode directly, or</li>
+                                <li>Clicking "Browse Products" button to search and select</li>
+                            </ul>
+                        </li>
+                        <li>View cart items showing:
+                            <ul>
+                                <li>Product name and details</li>
+                                <li>Unit price</li>
+                                <li>Quantity (adjustable)</li>
+                                <li>Total for each item</li>
+                                <li>Remove/Edit actions</li>
+                            </ul>
+                        </li>
+                        <li>Review Bill Summary on the right showing:
+                            <ul>
+                                <li><strong>Total Amount:</strong> Sum of all items</li>
+                                <li><strong>Discount:</strong> Apply discount if applicable</li>
+                                <li><strong>Net Amount:</strong> Final amount after discount</li>
+                                <li><strong>Change:</strong> Amount returned to customer</li>
+                            </ul>
+                        </li>
+                        <li>Click <strong>"Add Payment"</strong> to process payment with options:
+                            <ul>
+                                <li>Cash</li>
+                                <li>Card</li>
+                                <li>Check</li>
+                                <li>Bank Transfer</li>
+                                <li>Multiple payment methods</li>
+                            </ul>
+                        </li>
+                        <li>Click <strong>"Complete Sale (F9)"</strong> to finalize the transaction</li>
+                        <li>Invoice will be generated and can be printed</li>
+                    </ol>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/sales.png" alt="New Sale / Bill" onerror="this.parentElement.innerHTML='<div class=\'placeholder-img\'>📸 Screenshot: sales.png<br><small>Place your new sale/bill screenshot here</small></div>'">
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h4>Price Types</h4>
+                    <ul>
+                        <li><strong>Retail:</strong> Standard retail pricing for individual customers</li>
+                        <li><strong>Wholesale:</strong> Discounted pricing for bulk purchases and wholesale customers</li>
+                    </ul>
+                </div>
+
+                <div class="step">
+                    <h4>Keyboard Shortcuts</h4>
+                    <ul>
+                        <li><strong>F9:</strong> Complete Sale</li>
+                        <li><strong>F8:</strong> Clear Cart</li>
+                        <li><strong>ESC:</strong> Focus Barcode Scanner</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="product-return" class="section">
+                <h3>Product Returns</h3>
+                <p>Process returns for previously sold products. Find the original sale and create a return transaction to reverse the sale and restore inventory.</p>
+
+                <div class="step">
+                    <h4>Creating a Product Return</h4>
+                    <ol>
+                        <li>Navigate to <strong>Sales → Product Returns</strong></li>
+                        <li>Click <strong>"Create Return"</strong> button</li>
+                        <li>You will see the "Create Product Return" screen with search section:
+                            <ul>
+                                <li><strong>Search:</strong> Find by Customer name, Sale No, or Product name</li>
+                                <li><strong>From Date:</strong> Set start date for search range</li>
+                                <li><strong>To Date:</strong> Set end date for search range</li>
+                            </ul>
+                        </li>
+                        <li>Click <strong>"Search"</strong> button to find available sales products</li>
+                        <li>Review the "Available Sales Products" table showing:
+                            <ul>
+                                <li><strong>Product:</strong> Product name and SKU</li>
+                                <li><strong>Sale No:</strong> Original invoice number and date</li>
+                                <li><strong>Customer:</strong> Customer who purchased the item</li>
+                                <li><strong>Qty Sold:</strong> Quantity that was sold</li>
+                                <li><strong>Price:</strong> Original selling price</li>
+                                <li><strong>Action:</strong> "+ Add" button to add to return</li>
+                            </ul>
+                        </li>
+                        <li>Click <strong>"+ Add"</strong> for each product you want to return</li>
+                        <li>Specify the quantity to return for each product</li>
+                        <li>Review return details</li>
+                        <li>Click <strong>"Create Return"</strong> to process the return</li>
+                    </ol>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/product-return-create.png" alt="Create Product Return" onerror="this.parentElement.innerHTML='<div class=\'placeholder-img\'>📸 Screenshot: product-return-create.png<br><small>Place your create product return screenshot here</small></div>'">
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h4>Return Process Details</h4>
+                    <ul>
+                        <li><strong>Search Functionality:</strong> Filter sales by customer name, invoice number, or specific product</li>
+                        <li><strong>Date Range:</strong> Narrow search by specifying From and To dates</li>
+                        <li><strong>Multiple Returns:</strong> You can add multiple products to a single return transaction</li>
+                        <li><strong>Partial Returns:</strong> Return part or all of the quantity that was sold</li>
+                        <li><strong>Automatic Stock Update:</strong> Stock is automatically restored when return is created</li>
+                    </ul>
+                </div>
+
+                <div class="step">
+                    <h4>Return Effects</h4>
+                    <p>When you create a product return:</p>
+                    <ul>
+                        <li>Stock inventory is increased by the returned quantity</li>
+                        <li>Sales revenue is reversed</li>
+                        <li>Customer credit/refund is processed</li>
+                        <li>Original invoice reference is maintained</li>
+                        <li>Return transaction is recorded for audit trail</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="navigation-footer">
+                <h3>Navigation</h3>
+                <div class="nav-links">
+                    <a href="purchasing.html" class="nav-link">← Back: Purchasing</a>
+                    <a href="reports.html" class="nav-link">Next: Reports →</a>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 jPOS 2.x. All rights reserved. | Version 2.0 | Last Updated: December 2025</p>
+        </div>
+    </footer>
+
+    <style>
+        .navigation-footer {
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid #eee;
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .nav-link {
+            padding: 12px 20px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 600;
+            transition: all 0.3s;
+            flex: 1;
+            text-align: center;
+        }
+
+        .nav-link:hover {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</body>
+</html>

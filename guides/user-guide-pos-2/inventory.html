@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management - jPOS User Guide</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>jPOS 2.x</h1>
+                <span class="version">User Guide v2.0</span>
+            </div>
+            <nav class="main-nav">
+                <a href="home.html">Home</a>
+                <a href="getting-started.html">Getting Started</a>
+                <a href="inventory.html">Inventory</a>
+                <a href="purchasing.html">Purchasing</a>
+                <a href="sales.html">Sales</a>
+                <a href="reports.html">Reports</a>
+                <a href="faq.html">FAQ</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <h3>Inventory</h3>
+                <ul>
+                    <li><a href="#products">Products</a></li>
+                    <li><a href="#categories">Categories</a></li>
+                    <li><a href="#brands">Brands</a></li>
+                    <li><a href="#types">Types</a></li>
+                    <li><a href="#units">Measurement Units</a></li>
+                </ul>
+                <h3>Other Sections</h3>
+                <ul>
+                    <li><a href="getting-started.html">Getting Started</a></li>
+                    <li><a href="purchasing.html">Purchasing & Stock</a></li>
+                    <li><a href="sales.html">Sales Management</a></li>
+                    <li><a href="reports.html">Reports & Analytics</a></li>
+                    <li><a href="faq.html">FAQ & Support</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <section class="section">
+                <h2>Inventory Management</h2>
+                <p>Manage all your products, categories, brands, and measurement units from the inventory section.</p>
+            </section>
+
+            <section id="products" class="section">
+                <h3>Products</h3>
+                <p>The Products module allows you to add, edit, view, and manage all your inventory items.</p>
+
+                <div class="step">
+                        <h4>Adding a New Product</h4>
+                        <ol>
+                            <li>Navigate to <strong>Inventory → Products</strong></li>
+                            <li>Click the <strong>"Add Product"</strong> button</li>
+                            <li>Fill in the product details:
+                                <ul>
+                                    <li>Product Name (required)</li>
+                                    <li>SKU/Barcode</li>
+                                    <li>Category</li>
+                                    <li>Brand</li>
+                                    <li>Measurement Unit</li>
+                                    <li>Cost Price</li>
+                                    <li>Selling Price</li>
+                                    <li>Minimum Stock Level</li>
+                                    <li>Description</li>
+                                </ul>
+                            </li>
+                            <li>Click <strong>"Save"</strong> to create the product</li>
+                        </ol>
+
+                        <div class="note">
+                            <strong>Unit conversion:</strong> If your items move through different units, select the <em>Purchase</em>, <em>Transfer</em>, and <em>Sales</em> units and set the conversion rates so stock and pricing remain consistent across modules.
+                            <ul>
+                                <li><strong>Purchase → Transfer rate:</strong> How many transfer units are in one purchase unit (e.g., 1 box = 12 packs → enter 12).</li>
+                                <li><strong>Transfer → Sales rate:</strong> How many sales units are in one transfer unit (e.g., 1 pack = 6 pieces → enter 6).</li>
+                            </ul>
+                            <p>Example: with 1 box = 12 packs and 1 pack = 6 pieces, the system knows 1 box = 72 pieces. GRN uses purchase units, transfers use transfer units, and POS uses sales units; quantities are auto-converted between them.</p>
+                        </div>
+
+                        <div class="screenshot-placeholder">
+                            <img src="screenshots/addproduct.png" alt="Add Product Form" onerror="this.parentElement.innerHTML='<div class=\'placeholder-img\'>📸 Screenshot: add-product.png<br><small>Place your add product form screenshot here</small></div>'">
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <h4>Viewing Product List</h4>
+                        <p>The products list displays all your inventory items with the following information:</p>
+                        <ul>
+                            <li>Id</li>
+                            <li>Bar Code</li>
+                            <li>Product name</li>
+                            <li>Category and brand</li>
+                            <li>Purchase Price</li>
+                            <li>Selling price</li>
+                            <li>Quantity</li>
+                            <li>Status</li>
+                            <li>Actions (Edit, Duplicate, View Details)</li>
+                        </ul>
+
+                        <div class="screenshot-placeholder">
+                            <img src="screenshots/product-list.png" alt="Product List" onerror="this.parentElement.innerHTML='<div class=\'placeholder-img\'>📸 Screenshot: product-list.png<br><small>Place your product list screenshot here</small></div>'">
+                        </div>
+                    </div>
+
+                    <div class="tip">
+                        <strong>💡 Tip:</strong> Use the search and filter options to quickly find specific products in large inventories.
+                    </div>
+
+                <div class="step">
+                    <h4>Stock Quantity Management Logic</h4>
+                    <p>The system automatically manages product quantities across two locations (Store and Shop) based on different operations:</p>
+                    
+                    <div class="info-box">
+                        <h5>Store Quantity:</h5>
+                        <ul>
+                            <li><strong>GRN (Goods Received Note):</strong> When you add a GRN, the store quantity <strong>increases</strong> ✅</li>
+                            <li><strong>GRN Return:</strong> When you return goods via GRN return, the store quantity <strong>decreases</strong> ⬇️</li>
+                            <li><strong>Product Release Note:</strong> When you release products from store to shop, the store quantity <strong>decreases</strong> ⬇️</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-box">
+                        <h5>Shop Quantity:</h5>
+                        <ul>
+                            <li><strong>Product Release Note:</strong> When you receive products from store, the shop quantity <strong>increases</strong> ✅</li>
+                            <li><strong>Sales:</strong> When you make a sale, the shop quantity <strong>decreases</strong> ⬇️</li>
+                            <li><strong>Sales Return:</strong> When a customer returns items, the shop quantity <strong>increases</strong> ✅</li>
+                        </ul>
+                    </div>
+
+                    <div class="note">
+                        <strong>Note:</strong> All quantity adjustments happen automatically when you process the respective transactions. You don't need to manually update stock levels.
+                    </div>
+                </div>
+
+                
+            </section>
+
+            <section id="categories" class="section">
+                <h3>Categories</h3>
+                <p>Organize your products into categories for better management and reporting.</p>
+
+                <div class="step">
+                        <h4>Managing Categories</h4>
+                        <ol>
+                            <li>Go to <strong>Inventory → Categories</strong></li>
+                            <li>Click <strong>"Add Category"</strong></li>
+                            <li>Enter category name and select parent category.</li>
+                            <li>Create category</li>
+                        </ol>
+
+                        <div class="screenshot-placeholder">
+                            <img src="screenshots/category.png" alt="Categories Management" onerror="this.parentElement.innerHTML='<div class=\'placeholder-img\'>📸 Screenshot: categories.png<br><small>Place your categories screenshot here</small></div>'">
+                        </div>
+                    </div>
+            </section>
+
+            <section id="brands" class="section">
+                <h3>Brands</h3>
+                <p>Manage product brands to categorize items by manufacturer or supplier brand.</p>
+
+                <div class="step">
+                    <h4>Adding Brands</h4>
+                    <ol>
+                        <li>Go to <strong>Inventory → Brands</strong></li>
+                        <li>Click <strong>"Add Brand"</strong></li>
+                        <li>Enter brand name</li>
+                        <li>Add brand logo or description (optional)</li>
+                        <li>Save</li>
+                    </ol>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/brand.png" alt="Brands Management" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-img&quot;>📸 Screenshot: brands.png<br><small>Place your brands screenshot here</small></div>'">
+                    </div>
+                </div>
+            </section>
+
+            <section id="types" class="section">
+                <h3>Product Types</h3>
+                <p>Manage product types for additional categorization.</p>
+
+                <div class="step">
+                    <h4>Adding Product Types</h4>
+                    <ol>
+                        <li>Go to <strong>Inventory → Types</strong></li>
+                        <li>Click <strong>"Add Type"</strong></li>
+                        <li>Enter type name</li>
+                        <li>Save</li>
+                    </ol>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/type.png" alt="Product Types" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-img&quot;>📸 Screenshot: types.png<br><small>Place your types screenshot here</small></div>'">
+                    </div>
+                </div>
+            </section>
+
+            <section id="units" class="section">
+                <h3>Measurement Units</h3>
+                <p>Define measurement units (kg, pieces, liters, etc.) for accurate stock tracking.</p>
+
+                <div class="step">
+                    <h4>Adding Measurement Units</h4>
+                    <ol>
+                        <li>Go to <strong>Inventory → Units</strong></li>
+                        <li>Click <strong>"Add Unit"</strong></li>
+                        <li>Enter unit name (e.g., "Pieces", "Kg", "Liters")</li>
+                        <li>Enter abbreviation (e.g., "pcs", "kg", "L")</li>
+                        <li>Save</li>
+                    </ol>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/units.png" alt="Measurement Units" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-img&quot;>📸 Screenshot: units.png<br><small>Place your units screenshot here</small></div>'">
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h5>Common Units:</h5>
+                    <ul>
+                        <li><strong>pcs</strong> - Pieces</li>
+                        <li><strong>kg</strong> - Kilograms</li>
+                        <li><strong>L</strong> - Liters</li>
+                        <li><strong>box</strong> - Box</li>
+                        <li><strong>pack</strong> - Pack</li>
+                        <li><strong>bag</strong> - Bag</li>
+                        <li><strong>meter</strong> - Meter</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="navigation-footer">
+                <h3>Navigation</h3>
+                <div class="nav-links">
+                    <a href="getting-started.html" class="nav-link">← Back: Getting Started</a>
+                    <a href="purchasing.html" class="nav-link">Next: Purchasing & Stock →</a>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 jPOS 2.x. All rights reserved. | Version 2.0 | Last Updated: December 2025</p>
+        </div>
+    </footer>
+
+    <style>
+        .link-btn {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 4px;
+            text-decoration: none;
+            margin-top: 15px;
+            font-size: 0.9em;
+            transition: background 0.3s;
+        }
+        
+        .link-btn:hover {
+            background: #764ba2;
+        }
+
+        .navigation-footer {
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid #eee;
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .nav-link {
+            padding: 12px 20px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 600;
+            transition: all 0.3s;
+            flex: 1;
+            text-align: center;
+        }
+
+        .nav-link:hover {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</body>
+</html>

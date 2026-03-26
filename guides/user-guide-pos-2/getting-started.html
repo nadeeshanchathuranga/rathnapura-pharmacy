@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getting Started - jPOS User Guide</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>jPOS 2.x</h1>
+                <span class="version">User Guide v2.0</span>
+            </div>
+            <nav class="main-nav">
+                <a href="home.html">Home</a>
+                <a href="getting-started.html">Getting Started</a>
+                <a href="inventory.html">Inventory</a>
+                <a href="purchasing.html">Purchasing</a>
+                <a href="sales.html">Sales</a>
+                <a href="reports.html">Reports</a>
+                <a href="faq.html">FAQ</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <h3>Getting Started</h3>
+                <ul>
+                    <li><a href="#login">Login & Authentication</a></li>
+                    <li><a href="#dashboard">Dashboard Overview</a></li>
+                </ul>
+                <h3>Other Sections</h3>
+                <ul>
+                    <li><a href="inventory.html">Inventory Management</a></li>
+                    <li><a href="purchasing.html">Stores</a></li>
+                    <li><a href="sales.html">Sales Management</a></li>
+                    <li><a href="reports.html">Reports & Analytics</a></li>
+                    <li><a href="faq.html">FAQ & Support</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <section class="section">
+                <h2>Getting Started with jPOS</h2>
+                <p>Learn how to access the system and navigate the dashboard.</p>
+            </section>
+<div id="login" class="subsection">
+                    <h3>Login & Authentication</h3>
+                    <p>To access the jPOS system, you need valid credentials provided by your system administrator.</p>
+                    
+                    <div class="step">
+                        <h4>Step 1: Navigate to Login Page</h4>
+                        <p>Open your web browser and navigate to the jPOS URL provided by your administrator.</p>
+                        <div class="screenshot-placeholder">
+                            <img src="screenshots/loginpage.png" alt="Login Page" onerror="this.parentElement.innerHTML='<div class=\'placeholder-img\'>📸 Screenshot: login-page.png<br><small>Place your login page screenshot here</small></div>'">
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <h4>Step 2: Enter Login Credentials</h4>
+                        <p>Use one of the following default accounts to log in:</p>
+                        
+                        <div style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+                            <p><strong>Admin User</strong></p>
+                            <ul style="list-style: none; padding-left: 0;">
+                                <li>Email: <code>admin@gmail.com</code></li>
+                                <li>Password: <code>123456789</code></li>
+                            </ul>
+                        </div>
+                        
+                        <div style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+                            <p><strong>Manager User</strong></p>
+                            <ul style="list-style: none; padding-left: 0;">
+                                <li>Email: <code>manager@gmail.com</code></li>
+                                <li>Password: <code>123456789</code></li>
+                            </ul>
+                        </div>
+                        
+                        <div style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+                            <p><strong>Cashier User</strong></p>
+                            <ul style="list-style: none; padding-left: 0;">
+                                <li>Email: <code>cashier@gmail.com</code></li>
+                                <li>Password: <code>123456789</code></li>
+                            </ul>
+                        </div>
+                        
+                        <div style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+                            <p><strong>Store Keeper User</strong></p>
+                            <ul style="list-style: none; padding-left: 0;">
+                                <li>Email: <code>stockkeeper@gmail.com</code></li>
+                                <li>Password: <code>123456789</code></li>
+                            </ul>
+                        </div>
+                        
+                        <p><strong>Then:</strong></p>
+                        <ul>
+                            <li>Enter the email address</li>
+                            <li>Enter the password</li>
+                            <li>Click the "Sign In" button</li>
+                        </ul>
+                    </div>
+
+                    <div class="note">
+                        <strong>Note:</strong> If you forget your password, contact your system administrator for a password reset.
+                    </div>
+                </div>
+
+                <div id="role-permissions" class="subsection">
+                    <h3>Role Permissions</h3>
+                    <p>Use this matrix to see which roles can access each module. ✅ means the role has access; ❌ means it is not available for that role.</p>
+                    <div class="table-wrapper">
+                        <table class="feature-matrix">
+                            <thead>
+                                <tr>
+                                    <th>Module</th>
+                                    <th>Admin</th>
+                                    <th>Manager</th>
+                                    <th>Cashier</th>
+                                    <th>Stock Keeper</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Settings</td>
+                                    <td>✅</td>
+                                    <td>❌</td>
+                                    <td>❌</td>
+                                    <td>❌</td>
+                                </tr>
+                                <tr>
+                                    <td>Settings Report</td>
+                                    <td>✅</td>
+                                    <td>❌</td>
+                                    <td>❌</td>
+                                    <td>❌</td>
+                                </tr>
+                                <tr>
+                                    <td>User Management</td>
+                                    <td>✅</td>
+                                    <td>❌</td>
+                                    <td>❌</td>
+                                    <td>❌</td>
+                                </tr>
+                                <tr>
+                                    <td>Suppliers</td>
+                                    <td>✅</td>
+                                    <td>✅</td>
+                                    <td>❌</td>
+                                    <td>❌</td>
+                                </tr>
+                                <tr>
+                                    <td>Purchase Orders</td>
+                                    <td>✅</td>
+                                    <td>✅</td>
+                                    <td>❌</td>
+                                    <td>❌</td>
+                                </tr>
+                                <tr>
+                                    <td>GRN/Returns</td>
+                                    <td>✅</td>
+                                    <td>✅</td>
+                                    <td>❌</td>
+                                    <td>❌</td>
+                                </tr>
+                                <tr>
+                                    <td>Products</td>
+                                    <td>✅</td>
+                                    <td>✅</td>
+                                    <td>❌</td>
+                                    <td>✅</td>
+                                </tr>
+                                <tr>
+                                    <td>Categories/Types</td>
+                                    <td>✅</td>
+                                    <td>✅</td>
+                                    <td>❌</td>
+                                    <td>✅</td>
+                                </tr>
+                                <tr>
+                                    <td>Brands</td>
+                                    <td>✅</td>
+                                    <td>✅</td>
+                                    <td>❌</td>
+                                    <td>❌</td>
+                                </tr>
+                                <tr>
+                                    <td>Customers</td>
+                                    <td>✅</td>
+                                    <td>✅</td>
+                                    <td>❌</td>
+                                    <td>❌</td>
+                                </tr>
+                                <tr>
+                                    <td>Sales</td>
+                                    <td>✅</td>
+                                    <td>✅</td>
+                                    <td>✅</td>
+                                    <td>❌</td>
+                                </tr>
+                                <tr>
+                                    <td>Sales History</td>
+                                    <td>✅</td>
+                                    <td>✅</td>
+                                    <td>✅</td>
+                                    <td>❌</td>
+                                </tr>
+                                <tr>
+                                    <td>Returns</td>
+                                    <td>✅</td>
+                                    <td>✅</td>
+                                    <td>❌</td>
+                                    <td>❌</td>
+                                </tr>
+                                <tr>
+                                    <td>Stock Reports</td>
+                                    <td>✅</td>
+                                    <td>✅</td>
+                                    <td>❌</td>
+                                    <td>✅</td>
+                                </tr>
+                                <tr>
+                                    <td>Sales Reports</td>
+                                    <td>✅</td>
+                                    <td>✅</td>
+                                    <td>✅</td>
+                                    <td>❌</td>
+                                </tr>
+                                <tr>
+                                    <td>Financial Reports</td>
+                                    <td>✅</td>
+                                    <td>✅</td>
+                                    <td>❌</td>
+                                    <td>❌</td>
+                                </tr>
+                                <tr>
+                                    <td>Backup/Restore</td>
+                                    <td>✅</td>
+                                    <td>✅</td>
+                                    <td>❌</td>
+                                    <td>❌</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>  
+
+                <div id="dashboard" class="subsection">
+                    <h3>Dashboard Overview</h3>
+                    <p>After successful login, you'll be redirected to the main dashboard which provides an overview of your business operations.</p>
+                    
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/dashboard.png" alt="Main Dashboard" onerror="this.parentElement.innerHTML='<div class=\'placeholder-img\'>📸 Screenshot: dashboard.png<br><small>Place your dashboard screenshot here</small></div>'">
+                    </div>
+
+                    <h4>Dashboard Components:</h4>
+                    <p>The dashboard shows role-based tiles for quick access to core modules: Inventory (Products, Brands, Categories, Units, Types), Purchasing & Stock (POR, GRN, Returns, Transfers), Sales/POS, and rich Reports.</p>
+                    <p>Admin-only areas include System Users and Settings (Company Info, App, SMTP), with each card linking directly to its respective feature.</p>
+                    <!-- <ul>
+                        <li><strong>Sales Overview:</strong> View total sales, today's sales, and sales trends</li>
+                        <li><strong>Stock Alerts:</strong> Get notified about low stock and out-of-stock items</li>
+                        <li><strong>Recent Transactions:</strong> Quick access to recent sales and purchases</li>
+                        <li><strong>Quick Actions:</strong> Shortcuts to frequently used features</li>
+                    </ul> -->
+                </div>
+
+                
+
+            <section class="navigation-footer">
+                <h3>Navigation</h3>
+                <div class="nav-links">
+                    <a href="home.html" class="nav-link">← Back to Home</a>
+                    <a href="inventory.html" class="nav-link">Next: Inventory Management →</a>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 jPOS 2.x. All rights reserved. | Version 2.0 | Last Updated: December 2025</p>
+        </div>
+    </footer>
+
+    <style>
+        .link-btn {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 4px;
+            text-decoration: none;
+            margin-top: 15px;
+            font-size: 0.9em;
+            transition: background 0.3s;
+        }
+        
+        .link-btn:hover {
+            background: #764ba2;
+        }
+
+        .navigation-footer {
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid #eee;
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .nav-link {
+            padding: 12px 20px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 600;
+            transition: all 0.3s;
+            flex: 1;
+            text-align: center;
+        }
+
+        .nav-link:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
+        .feature-matrix {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95em;
+        }
+
+        .feature-matrix th,
+        .feature-matrix td {
+            border: 1px solid #e0e0e0;
+            padding: 10px 12px;
+            text-align: center;
+        }
+
+        .feature-matrix th {
+            background: #f7f7fb;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .feature-matrix tbody tr:nth-child(odd) {
+            background: #fafafa;
+        }
+    </style>
+</body>
+</html>

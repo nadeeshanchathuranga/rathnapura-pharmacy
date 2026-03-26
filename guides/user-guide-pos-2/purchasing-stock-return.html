@@ -1,0 +1,105 @@
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Return - jPOS User Guide</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>jPOS 2.x</h1>
+                <span class="version">User Guide v2.0</span>
+            </div>
+            <nav class="main-nav">
+                <a href="home.html">Home</a>
+                <a href="getting-started.html">Getting Started</a>
+                <a href="inventory.html">Inventory</a>
+                <a href="purchasing.html">Purchasing</a>
+                <a href="sales.html">Sales</a>
+                <a href="reports.html">Reports</a>
+                <a href="faq.html">FAQ</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <h3>Purchasing & Stock</h3>
+                <ul>
+                    <li><a href="purchasing-por.html">Purchase Orders (POR)</a></li>
+                    <li><a href="purchasing-grn.html">Goods Received Notes (GRN)</a></li>
+                    <li><a href="purchasing-grn-returns.html">GRN Returns</a></li>
+                    <li><a href="purchasing-expenses.html">Expenses</a></li>
+                    <li><a href="purchasing-suppliers.html">Suppliers</a></li>
+                    <li><a href="purchasing-transfer-request.html">Product Transfer Request</a></li>
+                    <li><a href="purchasing-release-notes.html">Product Release Notes</a></li>
+                    <li><a href="purchasing-stock-return.html" class="active">Stock Return</a></li>
+                </ul>
+                <h3>Other Sections</h3>
+                <ul>
+                    <li><a href="inventory.html">Inventory</a></li>
+                    <li><a href="sales.html">Sales Management</a></li>
+                    <li><a href="reports.html">Reports & Analytics</a></li>
+                    <li><a href="faq.html">FAQ & Support</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <section id="stock-return" class="section">
+                <h2>Stock Return</h2>
+                <p>Return stock to suppliers due to defects, damage, or other issues.</p>
+
+                <div class="step">
+                    <h4>Create Stock Return</h4>
+                    <ol>
+                        <li>Go to <strong>Purchasing & Stock → Stock Returns</strong></li>
+                        <li>Click <strong>"Create Stock Return"</strong></li>
+                        <li>Enter return details:
+                            <ul>
+                                <li><strong>Supplier:</strong> Supplier to return to</li>
+                                <li><strong>Return Date:</strong> Date of return</li>
+                                <li><strong>Reference GRN:</strong> Link to the original GRN (recommended)</li>
+                                <li><strong>Remarks:</strong> Optional notes</li>
+                            </ul>
+                        </li>
+                        <li>Add products and quantities to return</li>
+                        <li>Save to update stock and create credit note</li>
+                    </ol>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/stock-return-create.png" alt="Stock Return" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-img&quot;>📸 Screenshot: stock-return.png<br><small>Place your stock return screenshot here</small></div>'">
+                    </div>
+                </div>
+
+                <div class="tip">
+                    <strong>💡 Tips:</strong>
+                    <ul>
+                        <li>Always reference the original GRN for accuracy</li>
+                        <li>Document reasons for returns for auditing</li>
+                        <li>Confirm credit notes with supplier</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="navigation-footer">
+                <div class="nav-links">
+                    <a href="purchasing-release-notes.html" class="nav-link">← Back: Product Release Notes</a>
+                    <a href="purchasing.html" class="nav-link">Back to Purchasing Hub →</a>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 jPOS 2.x. All rights reserved. | Version 2.0 | Last Updated: December 2025</p>
+        </div>
+    </footer>
+</body>
+</html>

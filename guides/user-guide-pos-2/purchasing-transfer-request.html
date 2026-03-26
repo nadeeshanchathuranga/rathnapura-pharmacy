@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Transfer Request - jPOS User Guide</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>jPOS 2.x</h1>
+                <span class="version">User Guide v2.0</span>
+            </div>
+            <nav class="main-nav">
+                <a href="home.html">Home</a>
+                <a href="getting-started.html">Getting Started</a>
+                <a href="inventory.html">Inventory</a>
+                <a href="purchasing.html">Purchasing</a>
+                <a href="sales.html">Sales</a>
+                <a href="reports.html">Reports</a>
+                <a href="faq.html">FAQ</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <h3>Purchasing & Stock</h3>
+                <ul>
+                    <li><a href="purchasing-por.html">Purchase Orders (POR)</a></li>
+                    <li><a href="purchasing-grn.html">Goods Received Notes (GRN)</a></li>
+                    <li><a href="purchasing-grn-returns.html">GRN Returns</a></li>
+                    <li><a href="purchasing-expenses.html">Expenses</a></li>
+                    <li><a href="purchasing-suppliers.html">Suppliers</a></li>
+                    <li><a href="purchasing-transfer-request.html" class="active">Product Transfer Request</a></li>
+                    <li><a href="purchasing-release-notes.html">Product Release Notes</a></li>
+                    <li><a href="purchasing-stock-return.html">Stock Return</a></li>
+                </ul>
+                <h3>Other Sections</h3>
+                <ul>
+                    <li><a href="inventory.html">Inventory</a></li>
+                    <li><a href="sales.html">Sales Management</a></li>
+                    <li><a href="reports.html">Reports & Analytics</a></li>
+                    <li><a href="faq.html">FAQ & Support</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <section id="product-transfer-request" class="section">
+                <h2>Product Transfer Request</h2>
+                <p>Request inventory transfers between locations or warehouses.</p>
+
+                <div class="step">
+                    <h4>Create a Product Transfer Request</h4>
+                    <ol>
+                        <li>Go to <strong>Purchasing & Stock → Product Transfer Request</strong></li>
+                        <li>Click <strong>"Create Transfer Request"</strong></li>
+                        <li>Enter request details in the <strong>Order Information</strong> section:
+                            <ul>
+                                <li><strong>Transfer Number:</strong> Auto-generated unique identifier (read-only)</li>
+                                <li><strong>Order Date:</strong> Select the date for this transfer (required)</li>
+                                <li><strong>User:</strong> Select the user responsible for this transfer (required)</li>
+                            </ul>
+                        </li>
+                        <li>Add products to transfer in the <strong>Products</strong> section:
+                            <ul>
+                                <li>Click <strong>"Add Product"</strong> to add items</li>
+                                <li><strong>Product:</strong> Select the product to transfer (required)</li>
+                                <li><strong>Unit:</strong> Select the measurement unit for the product (required)</li>
+                                <li><strong>Quantity:</strong> Enter the quantity to transfer (required)</li>
+                                <li>Add multiple products as needed</li>
+                            </ul>
+                        </li>
+                        <li>Add products and quantities to transfer</li>
+                        <li>Save the transfer request</li>
+                    </ol>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/product-transfer-request-create.png" alt="Product Transfer Request" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-img&quot;>📸 Screenshot: product-transfer-request-create.png<br><small>Place your product transfer request screenshot here</small></div>'">
+                    </div>
+                </div>
+            </section>
+
+            <section class="navigation-footer">
+                <div class="nav-links">
+                    <a href="purchasing-suppliers.html" class="nav-link">← Back: Suppliers</a>
+                    <a href="purchasing-release-notes.html" class="nav-link">Next: Product Release Notes →</a>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 jPOS 2.x. All rights reserved. | Version 2.0 | Last Updated: December 2025</p>
+        </div>
+    </footer>
+</body>
+</html>

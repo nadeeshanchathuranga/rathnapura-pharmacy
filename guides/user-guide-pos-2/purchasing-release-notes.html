@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Release Notes - jPOS User Guide</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>jPOS 2.x</h1>
+                <span class="version">User Guide v2.0</span>
+            </div>
+            <nav class="main-nav">
+                <a href="home.html">Home</a>
+                <a href="getting-started.html">Getting Started</a>
+                <a href="inventory.html">Inventory</a>
+                <a href="purchasing.html">Purchasing</a>
+                <a href="sales.html">Sales</a>
+                <a href="reports.html">Reports</a>
+                <a href="faq.html">FAQ</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <h3>Purchasing & Stock</h3>
+                <ul>
+                    <li><a href="purchasing-por.html">Purchase Orders (POR)</a></li>
+                    <li><a href="purchasing-grn.html">Goods Received Notes (GRN)</a></li>
+                    <li><a href="purchasing-grn-returns.html">GRN Returns</a></li>
+                    <li><a href="purchasing-expenses.html">Expenses</a></li>
+                    <li><a href="purchasing-suppliers.html">Suppliers</a></li>
+                    <li><a href="purchasing-transfer-request.html">Product Transfer Request</a></li>
+                    <li><a href="purchasing-release-notes.html" class="active">Product Release Notes</a></li>
+                    <li><a href="purchasing-stock-return.html">Stock Return</a></li>
+                </ul>
+                <h3>Other Sections</h3>
+                <ul>
+                    <li><a href="inventory.html">Inventory</a></li>
+                    <li><a href="sales.html">Sales Management</a></li>
+                    <li><a href="reports.html">Reports & Analytics</a></li>
+                    <li><a href="faq.html">FAQ & Support</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <section id="product-release-notes" class="section">
+                <h2>Product Release Notes</h2>
+                <p>Record product releases from storage/production into active inventory.</p>
+
+                <div class="step">
+                    <h4>Create Product Release Note</h4>
+                    <ol>
+                        <li>Go to <strong>Purchasing & Stock → Product Release Notes</strong></li>
+                        <li>Click <strong>"Create Release Note"</strong></li>
+                        <li>Fill in the <strong>PRN Details</strong> section:
+                            <ul>
+                                <li><strong>Product Transfer Request:</strong> Select the related transfer request from the dropdown (required)</li>
+                                <li><strong>Release Date:</strong> Select the date when products are being released (required)</li>
+                                <li><strong>Status:</strong> Current status of the release (Pending, Completed, etc.)</li>
+                                <li><strong>User:</strong> Select the user responsible for the release (required)</li>
+                                <li><strong>Remark:</strong> Add optional notes or remarks about the release</li>
+                            </ul>
+                        </li>
+                        <li>Add products in the <strong>Products</strong> section:
+                            <ul>
+                                <li>Click the <strong>"+ Add Product"</strong> button to add items</li>
+                                <li>The table displays the following columns:
+                                    <ul>
+                                        <li><strong>Product:</strong> Name of the product being released</li>
+                                        <li><strong>Unit:</strong> Measurement unit of the product</li>
+                                        <li><strong>Qty:</strong> Quantity being released</li>
+                                        <li><strong>Unit Price (LKR):</strong> Price per unit</li>
+                                        <li><strong>Total (LKR):</strong> Total amount (automatically calculated)</li>
+                                        <li><strong>Action:</strong> Remove product from the list</li>
+                                    </ul>
+                                </li>
+                                <li>Add multiple products as needed</li>
+                            </ul>
+                        </li>
+                        <li>Review all details for accuracy</li>
+                        <li>Click <strong>"Create PRN"</strong> to save and release the products, or <strong>"Cancel"</strong> to discard changes</li>
+                    </ol>
+
+                    <div class="warning">
+                        <strong>⚠️ Important:</strong> When you select a Product Transfer Request from the dropdown, the products table is automatically populated with all products from that transfer request. You cannot add additional products outside of the transfer request.
+                    </div>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/product-release-note-create.png" alt="Product Release Note" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-img&quot;>📸 Screenshot: product-release-note.png<br><small>Place your product release note screenshot here</small></div>'">
+                    </div>
+                </div>
+
+                <div class="tip">
+                    <strong>💡 Tips:</strong>
+                    <ul>
+                        <li>Use notes to track production batches</li>
+                        <li>Ensure locations are configured correctly</li>
+                        <li>Verify quantities to avoid stock mismatches</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="navigation-footer">
+                <div class="nav-links">
+                    <a href="purchasing-transfer-request.html" class="nav-link">← Back: Product Transfer Request</a>
+                    <a href="purchasing-stock-return.html" class="nav-link">Next: Stock Return →</a>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 jPOS 2.x. All rights reserved. | Version 2.0 | Last Updated: December 2025</p>
+        </div>
+    </footer>
+</body>
+</html>

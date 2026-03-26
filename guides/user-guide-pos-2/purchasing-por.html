@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Orders (POR) - jPOS User Guide</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>jPOS 2.x</h1>
+                <span class="version">User Guide v2.0</span>
+            </div>
+            <nav class="main-nav">
+                <a href="home.html">Home</a>
+                <a href="getting-started.html">Getting Started</a>
+                <a href="inventory.html">Inventory</a>
+                <a href="purchasing.html">Purchasing</a>
+                <a href="sales.html">Sales</a>
+                <a href="reports.html">Reports</a>
+                <a href="faq.html">FAQ</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <h3>Purchasing & Stock</h3>
+                <ul>
+                    <li><a href="purchasing-por.html" class="active">Purchase Orders (POR)</a></li>
+                    <li><a href="purchasing-grn.html">Goods Received Notes (GRN)</a></li>
+                    <li><a href="purchasing-grn-returns.html">GRN Returns</a></li>
+                    <li><a href="purchasing-expenses.html">Expenses</a></li>
+                    <li><a href="purchasing-suppliers.html">Suppliers</a></li>
+                    <li><a href="purchasing-transfer-request.html">Product Transfer Request</a></li>
+                    <li><a href="purchasing-release-notes.html">Product Release Notes</a></li>
+                    <li><a href="purchasing-stock-return.html">Stock Return</a></li>
+                </ul>
+                <h3>Other Sections</h3>
+                <ul>
+                    <li><a href="inventory.html">Inventory</a></li>
+                    <li><a href="sales.html">Sales Management</a></li>
+                    <li><a href="reports.html">Reports & Analytics</a></li>
+                    <li><a href="faq.html">FAQ & Support</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <section id="purchase-orders" class="section">
+                <h2>Purchase Order Requests (POR)</h2>
+                <p>Purchase Order Requests allow you to create formal requests for products that need to be ordered from suppliers.</p>
+
+                <div class="step">
+                        <h4>Creating a Purchase Order Request</h4>
+                        <ol>
+                            <li>Navigate to <strong>Stores → Purchase Orders</strong></li>
+                            <li>Click the <strong>"Add new Purchase Order Request"</strong> button</li>
+                            <li>Fill in the <strong>Order Information</strong>:
+                                <ul>
+                                    <li><strong>Order Number:</strong> Auto-generated unique identifier (read-only)</li>
+                                    <li><strong>Order Date:</strong> Select the date for this request (required)</li>
+                                    <li><strong>User:</strong> Select the user responsible for this order (required)</li>
+                                </ul>
+                            </li>
+                            <li>Add products to the order:
+                                <ul>
+                                    <li>The system pre-populates low-stock items automatically</li>
+                                    <li>Click <strong>"+ Add Product"</strong> to add more items</li>
+                                    <li>Select product from the dropdown</li>
+                                    <li>The unit (measurement) is displayed automatically based on the product's purchase unit</li>
+                                    <li>Enter the <strong>Requested Quantity</strong> for each product</li>
+                                    <li>Click <strong>"Remove"</strong> to delete unwanted product rows (minimum 1 product required)</li>
+                                </ul>
+                            </li>
+                            <li>Review all information for accuracy</li>
+                            <li>Click <strong>"Create POR"</strong> to submit the request</li>
+                        </ol>
+
+                        <div class="screenshot-placeholder">
+                            <img src="screenshots/addPurchaseOrder.png" alt="Create Purchase Order Request" onerror="this.parentElement.innerHTML='<div class=\'placeholder-img\'>📸 Screenshot: por-create.png<br><small>Place your POR creation screenshot here</small></div>'">
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <h4>Viewing Purchase Order Requests</h4>
+                        <p>The Purchase Order Requests list displays all created purchase orders with their current status and details.</p>
+                        <ol>
+                            <li>Navigate to <strong>Stores → Purchase Orders</strong></li>
+                            <li>The list displays the following information for each POR:
+                                <ul>
+                                    <li><strong>Order Number:</strong> Unique identifier for each request</li>
+                                    <li><strong>Order Date:</strong> Date when the request was created</li>
+                                    <li><strong>User:</strong> User responsible for the order</li>
+                                    <li><strong>Status:</strong> Current status of the request (Pending, Approved, Fulfilled, etc.)</li>
+                                    <li><strong>Actions:</strong> View details, Delete the request</li>
+                                </ul>
+                            </li>
+                            <li></li>
+                            <li>Click on any row or the <strong>"View"</strong> button to see detailed product information</li>
+                            <li>Use <strong>"Edit"</strong> to modify pending requests (if you have permission)</li>
+                        </ol>
+
+                        <div class="screenshot-placeholder">
+                            <img src="screenshots/purchaseOrderRequest-list.png" alt="Purchase Order Request List" onerror="this.parentElement.innerHTML='<div class=\'placeholder-img\'>📸 Screenshot: purchaseOrderRequest-list.png<br><small>Place your POR list screenshot here</small></div>'">
+                        </div>
+                    </div>
+
+                    <div class="note">
+                        <strong>Note:</strong>
+                        <ul>
+                            <li>Purchase Order Requests do not automatically update stock levels; stock changes happen when you record the Goods Received Note (GRN).</li>
+                            <li>After you add a GRN against a purchase order, its status automatically moves to <em>Processing</em> so you can track fulfillment in progress.</li>
+                            <li>Once all ordered quantities are fully received through GRNs, the purchase order status automatically changes to <em>Completed</em>.</li>
+                        </ul>
+                    </div>
+
+                    <div class="tip">
+                        <strong>💡 Tip:</strong> The system automatically identifies products with low stock levels and suggests them when creating a new POR. You can add additional products manually or remove suggested items as needed.
+                    </div>
+
+                    <div class="info-box">
+                        <h4>POR Workflow</h4>
+                        <p><strong>1. Create POR</strong> → Request products that need to be ordered<br>
+                        <strong>2. Order from Supplier</strong> → Use POR as reference to place actual orders<br>
+                        <strong>3. Create GRN</strong> → When products arrive, record them via GRN to update inventory<br>
+                        <strong>4. Track Status</strong> → Monitor POR fulfillment through the Purchase Orders list</p>
+                    </div>
+            </section>
+
+            <section class="navigation-footer">
+                <div class="nav-links">
+                    <a href="purchasing.html" class="nav-link">← Back: Purchasing & Stock</a>
+                    <a href="purchasing-grn.html" class="nav-link">Next: Goods Received Notes →</a>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 jPOS 2.x. All rights reserved. | Version 2.0 | Last Updated: December 2025</p>
+        </div>
+    </footer>
+</body>
+</html>

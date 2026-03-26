@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports & Analytics - jPOS User Guide</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>jPOS 2.x</h1>
+                <span class="version">User Guide v2.0</span>
+            </div>
+            <nav class="main-nav">
+                <a href="home.html">Home</a>
+                <a href="getting-started.html">Getting Started</a>
+                <a href="inventory.html">Inventory</a>
+                <a href="purchasing.html">Purchasing</a>
+                <a href="sales.html">Sales</a>
+                <a href="reports.html">Reports</a>
+                <a href="faq.html">FAQ</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <h3>Reports</h3>
+                <ul>
+                    <li><a href="#sales-reports">Sales Reports</a></li>
+                    <li><a href="#stock-reports">Stock Reports</a></li>
+                    <li><a href="#activity-log-reports">Activity Log Reports</a></li>
+                    <li><a href="#sync-reports">Sync Reports</a></li>
+                    <li><a href="#income-reports">Income Reports</a></li>
+                    <li><a href="#expense-reports">Expense Reports</a></li>
+                    <li><a href="#product-release-reports">Product Release Reports</a></li>
+                    <li><a href="#stock-return-reports">Stock Return Reports</a></li>
+                    <li><a href="#low-stock-reports">Low Stock Reports</a></li>
+                    <li><a href="#grn-reports">GRN Reports</a></li>
+                    <li><a href="#grn-return-reports">GRN Return Reports</a></li>
+                    <li><a href="#product-movement-reports">Product Movement Reports</a></li>
+                </ul>
+                <h3>Other Sections</h3>
+                <ul>
+                    <li><a href="sales.html">Sales Management</a></li>
+                    <li><a href="purchasing.html">Purchasing & Stock</a></li>
+                    <li><a href="faq.html">FAQ & Support</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <section class="section">
+                <h2>Reports & Analytics</h2>
+                <p>Generate comprehensive reports to analyze your business performance.</p>
+            </section>
+
+            <section id="sales-reports" class="section">
+                <h3>Sales Reports</h3>
+                <p>Sales summary by type with income details. View comprehensive sales analytics with key metrics, payment breakdowns, and detailed product sales information.</p>
+
+                <div class="step">
+                    <h4>Generating a Sales Report</h4>
+                    <ol>
+                        <li>Navigate to <strong>Reports → Sales Report</strong></li>
+                        <li>Set the date range:
+                            <ul>
+                                <li><strong>From Date:</strong> Select start date (e.g., 12/01/2025)</li>
+                                <li><strong>To Date:</strong> Select end date (e.g., 12/17/2025)</li>
+                            </ul>
+                        </li>
+                        <li>Click <strong>"Apply"</strong> to generate the report</li>
+                        <li>Click <strong>"Reset"</strong> to clear filters and start over</li>
+                    </ol>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/sales-report-ui.png" alt="Sales Report" onerror="this.parentElement.innerHTML='<div class=\'placeholder-img\'>📸 Screenshot: sales-report.png<br><small>Place your sales report screenshot here</small></div>'">
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h4>Key Metrics Displayed</h4>
+                    <p>The report displays three main summary cards:</p>
+                    <ul>
+                        <li><strong>Total Income:</strong> Total revenue from all sales in the period</li>
+                        <li><strong>Total Sales:</strong> Number of sales transactions</li>
+                        <li><strong>Net After Returns:</strong> Total income minus returns and adjustments</li>
+                    </ul>
+                </div>
+
+                <div class="step">
+                    <h4>Income by Payment Type</h4>
+                    <p>Shows a breakdown of income received through different payment methods:</p>
+                    <ul>
+                        <li><strong>Cash:</strong> Cash payments received with transaction count</li>
+                        <li><strong>Card:</strong> Card payments (if applicable)</li>
+                        <li><strong>Check:</strong> Check payments (if applicable)</li>
+                        <li><strong>Bank Transfer:</strong> Electronic transfers (if applicable)</li>
+                    </ul>
+                    <p>Each payment type card shows the total amount and number of transactions.</p>
+                </div>
+
+                <div class="step">
+                    <h4>Sales by Type Table</h4>
+                    <p>Detailed breakdown of sales by type (Retail, Wholesale, etc.)</p>
+                    <p><strong>Columns:</strong></p>
+                    <ul>
+                        <li><strong>Type:</strong> Sale type (Retail, Wholesale, etc.)</li>
+                        <li><strong>Sales Count:</strong> Number of transactions of this type</li>
+                        <li><strong>Gross Total:</strong> Total before discounts</li>
+                        <li><strong>Discount:</strong> Total discounts applied</li>
+                        <li><strong>Net Total:</strong> Amount after discounts</li>
+                        <li><strong>Returns:</strong> Amount from returned items</li>
+                        <li><strong>Net After Returns:</strong> Final amount after all adjustments</li>
+                        <li><strong>Balance:</strong> Any remaining balance</li>
+                    </ul>
+                    <p><strong>Export Options:</strong> Click "Export PDF" or "Export Excel" to download the table</p>
+                </div>
+
+                <div class="step">
+                    <h4>Product Sales & Returns Report</h4>
+                    <p>Detailed product-level sales information including returns</p>
+                    <p><strong>Columns:</strong></p>
+                    <ul>
+                        <li><strong>Product Name:</strong> Name of the product sold</li>
+                        <li><strong>Barcode:</strong> Product barcode/SKU</li>
+                        <li><strong>Sales Date:</strong> Date of the sale</li>
+                        <li><strong>Sales Qty:</strong> Quantity sold</li>
+                        <li><strong>Sales Amount:</strong> Total amount for that product</li>
+                        <li><strong>Sales Return Date:</strong> Date of return (if applicable)</li>
+                        <li><strong>Returns Qty:</strong> Quantity returned</li>
+                        <li><strong>Returns Amount:</strong> Amount of returned items</li>
+                        <li><strong>Net Sales Qty:</strong> Final quantity after returns</li>
+                        <li><strong>Net Sales Amount:</strong> Final amount after returns</li>
+                    </ul>
+                    <p><strong>Export Options:</strong> Click "Export PDF" or "Export Excel" to download the detailed table</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>Using Sales Reports</h4>
+                    <ul>
+                        <li>Generate daily reports to monitor sales performance</li>
+                        <li>Compare periods to identify trends and growth</li>
+                        <li>Track payment method preferences</li>
+                        <li>Analyze return rates and patterns</li>
+                        <li>Export for tax and accounting purposes</li>
+                        <li>Share with management for performance review</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="stock-reports" class="section">
+                <h3>Product Stock Reports</h3>
+                <p>Monitor current stock levels, stock values, and inventory health.</p>
+
+                <div class="step">
+                    <h4>Generating a Stock Report</h4>
+                    <ol>
+                        <li>Go to <strong>Reports → Stock Report</strong></li>
+                        <li>Select filters:
+                            <ul>
+                                <li>Category</li>
+                                <li>Brand</li>
+                                <li>Stock status (Low, Out of Stock, etc.)</li>
+                            </ul>
+                        </li>
+                        <li>Click <strong>"Generate Report"</strong></li>
+                        <li>Review stock information</li>
+                        <li>Export if needed</li>
+                    </ol>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/product-stock-report.png" alt="Stock Report" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-img&quot;>📸 Screenshot: stock-report.png<br><small>Place your stock report screenshot here</small></div>'">
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h4>Stock Report Columns</h4>
+                    <ul>
+                        <li><strong>Product:</strong> Product name</li>
+                        <li><strong>SKU:</strong> Product code</li>
+                        <li><strong>Category:</strong> Product category</li>
+                        <li><strong>Current Stock:</strong> Quantity on hand</li>
+                        <li><strong>Minimum Level:</strong> Reorder point</li>
+                        <li><strong>Unit Price:</strong> Cost price</li>
+                        <li><strong>Total Value:</strong> Stock value</li>
+                        <li><strong>Status:</strong> In stock, Low, Out of stock</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="activity-log-reports" class="section">
+                <h3>Activity Log Reports</h3>
+                <p>Monitor current stock levels, stock values, and inventory health.</p>
+
+                <div class="step">
+                    <h4>Generating a Stock Report</h4>
+                    <ol>
+                        <li>Go to <strong>Reports → Stock Report</strong></li>
+                        <li>Select filters:
+                            <ul>
+                                <li>Category</li>
+                                <li>Brand</li>
+                                <li>Stock status (Low, Out of Stock, etc.)</li>
+                            </ul>
+                        </li>
+                        <li>Click <strong>"Generate Report"</strong></li>
+                        <li>Review stock information</li>
+                        <li>Export if needed</li>
+                    </ol>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/activity-log-report.png" alt="Activity Log Report" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-img&quot;>📸 Screenshot: activity-log-report.png<br><small>Place your activity log report screenshot here</small></div>'">
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h4>Stock Report Columns</h4>
+                    <ul>
+                        <li><strong>Product:</strong> Product name</li>
+                        <li><strong>SKU:</strong> Product code</li>
+                        <li><strong>Category:</strong> Product category</li>
+                        <li><strong>Current Stock:</strong> Quantity on hand</li>
+                        <li><strong>Minimum Level:</strong> Reorder point</li>
+                        <li><strong>Unit Price:</strong> Cost price</li>
+                        <li><strong>Total Value:</strong> Stock value</li>
+                        <li><strong>Status:</strong> In stock, Low, Out of stock</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="sync-reports" class="section">
+                <h3>Sync Reports</h3>
+                <p>Monitor current stock levels, stock values, and inventory health.</p>
+
+                <div class="step">
+                    <h4>Generating a Sync Report</h4>
+                    <ol>
+                        <li>Go to <strong>Reports → Stock Report</strong></li>
+                        <li>Select filters:
+                            <ul>
+                                <li>Category</li>
+                                <li>Brand</li>
+                                <li>Stock status (Low, Out of Stock, etc.)</li>
+                            </ul>
+                        </li>
+                        <li>Click <strong>"Generate Report"</strong></li>
+                        <li>Review stock information</li>
+                        <li>Export if needed</li>
+                    </ol>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/sync-report.jpeg" alt="Activity Log Report" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-img&quot;>📸 Screenshot: activity-log-report.png<br><small>Place your activity log report screenshot here</small></div>'">
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h4>Stock Report Columns</h4>
+                    <ul>
+                        <li><strong>Product:</strong> Product name</li>
+                        <li><strong>SKU:</strong> Product code</li>
+                        <li><strong>Category:</strong> Product category</li>
+                        <li><strong>Current Stock:</strong> Quantity on hand</li>
+                        <li><strong>Minimum Level:</strong> Reorder point</li>
+                        <li><strong>Unit Price:</strong> Cost price</li>
+                        <li><strong>Total Value:</strong> Stock value</li>
+                        <li><strong>Status:</strong> In stock, Low, Out of stock</li>
+                    </ul>
+                </div>
+            </section>
+
+             <section id="income-reports" class="section">
+                <h3>Income Reports</h3>
+                <p>Monitor current stock levels, stock values, and inventory health.</p>
+
+                <div class="step">
+                    <h4>Generating a Income Report</h4>
+                    <ol>
+                        <li>Go to <strong>Reports → Stock Report</strong></li>
+                        <li>Select filters:
+                            <ul>
+                                <li>Category</li>
+                                <li>Brand</li>
+                                <li>Stock status (Low, Out of Stock, etc.)</li>
+                            </ul>
+                        </li>
+                        <li>Click <strong>"Generate Report"</strong></li>
+                        <li>Review stock information</li>
+                        <li>Export if needed</li>
+                    </ol>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/income-report.png" alt="Income Report" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-img&quot;>📸 Screenshot: income-report.png<br><small>Place your income report screenshot here</small></div>'">
+                    </div>
+                </div>
+            </section>
+
+            <section id="expense-reports" class="section">
+                <h3>Expense Reports</h3>
+                <p>Track and analyze business expenses over time.</p>
+
+                <div class="step">
+                    <h4>Generating an Expense Report</h4>
+                    <ol>
+                        <li>Go to <strong>Reports → Expense Report</strong></li>
+                        <li>Select date range</li>
+                        <li>Filter by:
+                            <ul>
+                                <li>Expense category</li>
+                                <li>Payment method</li>
+                                <li>User</li>
+                            </ul>
+                        </li>
+                        <li>Generate report</li>
+                        <li>Analyze expense trends</li>
+                    </ol>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/expense-report.png" alt="Expense Report" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-img&quot;>📸 Screenshot: expense-report.png<br><small>Place your expense report screenshot here</small></div>'">
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h4>Expense Report Uses</h4>
+                    <ul>
+                        <li>Track operational costs</li>
+                        <li>Identify cost reduction opportunities</li>
+                        <li>Budget planning and forecasting</li>
+                        <li>Tax and audit purposes</li>
+                        <li>Performance analysis</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="product-release-reports" class="section">
+                <h3>Product Release Reports</h3>
+                <p>Track and analyze business expenses over time.</p>
+
+                <div class="step">
+                    <h4>Generating an Product Release Reports</h4>
+                    <ol>
+                        <li>Go to <strong>Reports → Product Release Report</strong></li>
+                        <li>Select date range</li>
+                        <li>Filter by:
+                            <ul>
+                                <li>Expense category</li>
+                                <li>Payment method</li>
+                                <li>User</li>
+                            </ul>
+                        </li>
+                        <li>Generate report</li>
+                        <li>Analyze expense trends</li>
+                    </ol>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/product-release-note.png" alt="Expense Report" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-img&quot;>📸 Screenshot: expense-report.png<br><small>Place your expense report screenshot here</small></div>'">
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h4>Expense Report Uses</h4>
+                    <ul>
+                        <li>Track operational costs</li>
+                        <li>Identify cost reduction opportunities</li>
+                        <li>Budget planning and forecasting</li>
+                        <li>Tax and audit purposes</li>
+                        <li>Performance analysis</li>
+                    </ul>
+                </div>
+            </section>
+
+             <section id="stock-return-reports" class="section">    
+                <h3>Stock Return Reports</h3>
+                <p>Track and analyze business expenses over time.</p>
+
+                <div class="step">
+                    <h4>Generating an Stock Return Reports</h4>
+                    <ol>
+                        <li>Go to <strong>Reports → Stock Return Report</strong></li>
+                        <li>Select date range</li>
+                        <li>Filter by:
+                            <ul>
+                                <li>Expense category</li>
+                                <li>Payment method</li>
+                                <li>User</li>
+                            </ul>
+                        </li>
+                        <li>Generate report</li>
+                        <li>Analyze expense trends</li>
+                    </ol>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/stock-transfer-return.png" alt="Expense Report" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-img&quot;>📸 Screenshot: expense-report.png<br><small>Place your expense report screenshot here</small></div>'">
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h4>Expense Report Uses</h4>
+                    <ul>
+                        <li>Track operational costs</li>
+                        <li>Identify cost reduction opportunities</li>
+                        <li>Budget planning and forecasting</li>
+                        <li>Tax and audit purposes</li>
+                        <li>Performance analysis</li>
+                    </ul>
+                </div>
+            </section>
+
+             <section id="low-stock-reports" class="section">    
+                <h3>Low Stock Reports </h3>
+                <p>Track and analyze business expenses over time.</p>
+
+                <div class="step">
+                    <h4>Generating an Low Stock Reports</h4>
+                    <ol>
+                        <li>Go to <strong>Reports → Low Stock Report</strong></li>
+                        <li>Select date range</li>
+                        <li>Filter by:
+                            <ul>
+                                <li>Expense category</li>
+                                <li>Payment method</li>
+                                <li>User</li>
+                            </ul>
+                        </li>
+                        <li>Generate report</li>
+                        <li>Analyze expense trends</li>
+                    </ol>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/low-stock-report.png" alt="Low Stock Report" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-img&quot;>📸 Screenshot: low-stock-report.png<br><small>Place your low stock report screenshot here</small></div>'">
+                    </div>
+                </div>
+            </section>
+
+             <section id="grn-reports" class="section">    
+                <h3>GRN Reports </h3>
+                <p>Track and analyze business expenses over time.</p>
+
+                <div class="step">
+                    <h4>Generating an Low GRN Reports</h4>
+                    <ol>
+                        <li>Go to <strong>Reports → GRN Report</strong></li>
+                        <li>Select date range</li>
+                        <li>Filter by:
+                            <ul>
+                                <li>Expense category</li>
+                                <li>Payment method</li>
+                                <li>User</li>
+                            </ul>
+                        </li>
+                        <li>Generate report</li>
+                        <li>Analyze expense trends</li>
+                    </ol>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/grn-report.png" alt="GRN Report" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-img&quot;>📸 Screenshot: grn-report.png<br><small>Place your GRN report screenshot here</small></div>'">
+                    </div>
+                </div>
+            </section>
+
+              <section id="grn-return-reports" class="section">    
+                <h3>GRN Return Reports </h3>
+                <p>Track and analyze business expenses over time.</p>
+
+                <div class="step">
+                    <h4>Generating GRN Return Reports</h4>
+                    <ol>
+                        <li>Go to <strong>Reports → GRN Return Report</strong></li>
+                        <li>Select date range</li>
+                        <li>Filter by:
+                            <ul>
+                                <li>Expense category</li>
+                                <li>Payment method</li>
+                                <li>User</li>
+                            </ul>
+                        </li>
+                        <li>Generate report</li>
+                        <li>Analyze expense trends</li>
+                    </ol>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/grn-return-report.png" alt="GRN Return Report" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-img&quot;>📸 Screenshot: grn-return-report.png<br><small>Place your GRN Return report screenshot here</small></div>'">
+                    </div>
+                </div>
+            </section>
+
+                 <section id="product-movement-reports" class="section">
+                <h3>Product Movement Reports</h3>
+                <p>Track all product movements including sales, purchases, transfers, and adjustments.</p>
+
+                <div class="step">
+                    <h4>Generating a Movement Report</h4>
+                    <ol>
+                        <li>Go to <strong>Reports → Product Movement</strong></li>
+                        <li>Select date range</li>
+                        <li>Select movement type:
+                            <ul>
+                                <li>All movements</li>
+                                <li>Sales only</li>
+                                <li>Purchases only</li>
+                                <li>Transfers only</li>
+                                <li>Adjustments</li>
+                            </ul>
+                        </li>
+                        <li>Filter by product or category</li>
+                        <li>Generate and review</li>
+                    </ol>
+
+                    <div class="screenshot-placeholder">
+                        <img src="screenshots/pproduct-movement-report.png" alt="Movement Report" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-img&quot;>📸 Screenshot: movement-report.png<br><small>Place your movement report screenshot here</small></div>'">
+                    </div>
+                </div>
+            </section>
+
+            <section class="navigation-footer">
+                <h3>Navigation</h3>
+                <div class="nav-links">
+                    <a href="sales.html" class="nav-link">← Back: Sales</a>
+                    <a href="faq.html" class="nav-link">Next: FAQ & Support →</a>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 jPOS 2.x. All rights reserved. | Version 2.0 | Last Updated: December 2025</p>
+        </div>
+    </footer>
+
+    <style>
+        .report-tips {
+            margin: 40px 0;
+        }
+
+        .navigation-footer {
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid #eee;
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .nav-link {
+            padding: 12px 20px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 600;
+            transition: all 0.3s;
+            flex: 1;
+            text-align: center;
+        }
+
+        .nav-link:hover {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</body>
+</html>
