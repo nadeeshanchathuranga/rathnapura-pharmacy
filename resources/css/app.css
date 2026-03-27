@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+select[data-select-navigation-active="true"] {
+	outline: 3px solid rgb(59 130 246 / 0.75);
+	outline-offset: 2px;
+}

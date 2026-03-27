@@ -17,12 +17,21 @@
               <h1 class="text-3xl font-bold text-black">Sales</h1>
             </div>
             <p class="text-gray-400">
-              Create new invoice (F9: Complete | F8: Clear | ESC: Focus Barcode)
+              Create new invoice (F2: Focus Barcode | F4: Cash | F9: Card | F8: Clear | F12: Sales Return | ESC: Home)
             </p>
           </div>
-          <div class="text-right">
-            <div class="text-sm text-gray-400">Invoice No.</div>
-            <div class="text-2xl font-bold text-blue-400">{{ invoice_no }}</div>
+          <div class="flex items-center gap-3">
+            <button
+              @click="goToCreateSalesReturn"
+              data-shortcut="F12"
+              class="px-6 py-2.5 rounded-[5px] font-medium text-sm bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 shadow-sm"
+            >
+              Create Sales Return (F12)
+            </button>
+            <div class="text-right">
+              <div class="text-sm text-gray-400">Invoice No.</div>
+              <div class="text-2xl font-bold text-blue-400">{{ invoice_no }}</div>
+            </div>
           </div>
         </div>
 
@@ -74,6 +83,8 @@
                 ref="barcodeField"
                 type="text"
                 v-model="barcodeInput"
+                data-shortcut="F2, AudioVolumeDown, VolumeDown"
+                @click="focusBarcodeField"
                 @keyup.enter="addByBarcode"
                 placeholder="Scan barcode..."
                 class="flex-1 px-3 py-2 bg-white text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-300 font-mono"
@@ -215,6 +226,7 @@
                 <button
                   v-if="form.items.length > 0"
                   @click="clearCart"
+                  data-shortcut="F8"
                   class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-[5px] transition font-medium"
                 >
                   Clear Cart (F8)
@@ -483,31 +495,49 @@
                 </div>
               </div>
 
-              <!-- Payment Button -->
-              <button
-                @click="openPaymentModal"
-                :disabled="form.items.length === 0"
-                class="mt-6 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-200 disabled:cursor-not-allowed text-white font-bold py-4 px-4 rounded-lg transition text-lg shadow-lg"
-              >
-                💳 Add Payment
-              </button>
+              <!-- Payment Buttons -->
+              <div class="mt-6 grid grid-cols-2 gap-3">
+                <button
+                  @click="openPaymentModalForMethod(0)"
+                  data-shortcut="F4"
+                  :disabled="form.items.length === 0"
+                  class="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-200 disabled:cursor-not-allowed text-white font-bold py-4 px-4 rounded-lg transition text-lg shadow-lg"
+                >
+                  💵 Cash (F4)
+                </button>
+                <button
+                  @click="openPaymentModalForMethod(1)"
+                  data-shortcut="F9"
+                  :disabled="form.items.length === 0"
+                  class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-200 disabled:cursor-not-allowed text-white font-bold py-4 px-4 rounded-lg transition text-lg shadow-lg"
+                >
+                  💳 Card (F9)
+                </button>
+              </div>
 
               <!-- Submit Button -->
               <button
                 @click="submitSale"
+                data-shortcut="Enter"
                 :disabled="
                   form.items.length === 0 || form.payments.length === 0 || form.processing
                 "
                 class="mt-3 w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-4 px-4 rounded-lg transition text-lg shadow-lg"
               >
                 <span v-if="form.processing">⏳ Processing...</span>
-                <span v-else>✅ Complete Salesd (F9)</span>
+                <span v-else>✅ Complete Sale</span>
               </button>
 
               <!-- Quick Actions -->
               <div class="mt-4 text-xs text-gray-400 text-center">
                 <p>Keyboard Shortcuts:</p>
-                <p>F9: Complete Sale | F8: Clear Cart | ESC: Focus Barcode</p>
+                <p>F2: Focus Barcode | F4: Cash Payment | F9: Card Payment | F8: Clear Cart | F12: Create Sales Return | ESC: Home</p>
+                <button
+                  type="button"
+                  class="hidden"
+                  data-shortcut="F2, AudioVolumeDown, VolumeDown"
+                  @click="focusBarcodeField"
+                ></button>
               </div>
             </div>
           </div>
@@ -807,7 +837,7 @@
     >
       <div class="p-8 bg-white">
         <div class="mb-6">
-          <h2 class="text-2xl font-bold text-gray-800 mb-2">Add Payment Method</h2>
+          <h2 class="text-2xl font-bold text-gray-800 mb-2">Add Payment</h2>
           <p class="text-gray-600 text-sm">
             Remaining:
             <span class="text-red-600 font-semibold"
@@ -815,23 +845,12 @@
               {{ balance > 0 ? balance.toFixed(2) : "0.00" }}</span
             >
           </p>
+          <p class="text-sm mt-1 font-medium text-blue-600">
+            Selected Method: {{ paymentMethod === 0 ? 'Cash (F4)' : 'Card (F9)' }}
+          </p>
         </div>
 
         <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2"
-              >Payment Method</label
-            >
-            <select
-              v-model.number="paymentMethod"
-              class="w-full px-4 py-3 bg-white text-gray-800 border border-gray-300 rounded-[5px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option :value="0">💵 Cash</option>
-              <option :value="1">💳 Card</option>
-              <!-- <option :value="2">📝 Credit</option> -->
-            </select>
-          </div>
-
           <div v-if="paymentMethod === 1">
             <label class="block text-sm font-medium text-gray-700 mb-2"
               >Card Type</label
@@ -863,12 +882,15 @@
         <div class="flex gap-3 mt-6">
           <button
             @click="addPayment"
+            data-dialog-primary="true"
+            autofocus
             class="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-[5px] transition"
           >
             Add Payment
           </button>
           <button
             @click="showPaymentModal = false"
+            data-dialog-secondary="true"
             class="flex-1 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-[5px] transition"
           >
             Close
@@ -907,12 +929,16 @@
           <div class="flex gap-3 justify-center">
             <button
               @click="printAndClose"
+              data-shortcut="Enter"
+              data-dialog-primary="true"
+              autofocus
               class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition shadow-lg"
             >
               PRINT RECEIPT
             </button>
             <button
               @click="closeModal"
+              data-dialog-secondary="true"
               class="px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition shadow-lg"
             >
               CLOSE
@@ -1024,7 +1050,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, useForm, router, usePage } from "@inertiajs/vue3";
 const page = usePage();
-import { ref, computed, onMounted,onUnmounted } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
 import { logActivity } from "@/composables/useActivityLog";
 import Modal from "@/Components/Modal.vue";
 import CustomerCreateModal from "@/Pages/Customers/Components/CustomerCreateModal.vue";
@@ -1460,12 +1486,14 @@ const removePayment = (index) => {
   form.payments.splice(index, 1);
 };
 
-// Open payment modal
-const openPaymentModal = () => {
+// Open payment modal with selected method
+const openPaymentModalForMethod = (method = 0) => {
   if (form.items.length === 0) {
     alert("Please add items to cart");
     return;
   }
+
+  paymentMethod.value = method;
   showPaymentModal.value = true;
   paymentAmount.value = balance.value > 0 ? balance.value : 0;
 };
@@ -1485,6 +1513,17 @@ const openProductModal = () => {
 const closeProductModal = () => {
   showProductModal.value = false;
   barcodeField.value?.focus();
+};
+
+const focusBarcodeField = () => {
+  if (barcodeField.value) {
+    barcodeField.value.focus();
+    barcodeField.value.select?.();
+  }
+};
+
+const goToCreateSalesReturn = () => {
+  router.visit(route("return.index", { open_create: 1 }));
 };
 
 const filterProducts = () => {
@@ -2057,86 +2096,17 @@ const printAndClose = () => {
   }, 800);
 };
 
-// Keyboard shortcuts
-const handleKeyDown = (event) => {
-  // Check if F8 is pressed using multiple methods
-  const isF8 = event.key === 'F8' || 
-               event.keyCode === 119 || 
-               event.code === 'F8';
-  
-  // Check if F9 is pressed using multiple methods
-  const isF9 = event.key === 'F9' || 
-               event.keyCode === 120 || 
-               event.code === 'F9';
-  
-  // Check if ESC is pressed
-  const isESC = event.key === 'Escape' || 
-                event.keyCode === 27 || 
-                event.code === 'Escape';
-  
-  if (isF8) {
-    // Completely prevent default and stop propagation
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-    
-    // Don't trigger if user is actively typing in form fields (except barcode field)
-    const activeElement = document.activeElement;
-    const isInputField = ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeElement?.tagName);
-    const isBarcodeField = activeElement === barcodeField.value;
-    
-    if ((!isInputField || isBarcodeField) && form.items.length > 0) {
-      clearCart();
-    }
-    
-    return false;
-  }
-  
-  if (isF9) {
-    // Completely prevent default and stop propagation
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-    
-    // Don't trigger if user is actively typing in form fields (except barcode field)
-    const activeElement = document.activeElement;
-    const isInputField = ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeElement?.tagName);
-    const isBarcodeField = activeElement === barcodeField.value;
-    
-    // Check if sale can be completed (has items and payments, not already processing)
-    if ((!isInputField || isBarcodeField) && form.items.length > 0 && form.payments.length > 0 && !form.processing) {
-      submitSale();
-    }
-    
-    return false;
-  }
-  
-  if (isESC) {
-    // Prevent default ESC behavior
-    event.preventDefault();
-    event.stopPropagation();
-    
-    // Focus the barcode field
-    if (barcodeField.value) {
-      barcodeField.value.focus();
-      barcodeField.value.select();
-    }
-    
-    return false;
-  }
-};
-
-
 // Focus barcode input on mount
 onMounted(() => {
-  barcodeField.value?.focus();
-  window.addEventListener("keydown", handleKeyDown, true);
+  focusBarcodeField();
+  nextTick(() => {
+    focusBarcodeField();
+  });
+  setTimeout(() => {
+    focusBarcodeField();
+  }, 80);
 
   // Do not set a default customer; keep it empty to show '-- Select Customer --'
-});
-
-onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeyDown, true);
 });
 </script>
 

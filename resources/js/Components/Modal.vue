@@ -55,10 +55,18 @@ const closeOnEscape = (e) => {
     }
 };
 
+const closeOnGlobalRequest = () => {
+    if (props.show) {
+        close();
+    }
+};
+
 onMounted(() => document.addEventListener('keydown', closeOnEscape));
+onMounted(() => document.addEventListener('app:close-top-dialog', closeOnGlobalRequest));
 
 onUnmounted(() => {
     document.removeEventListener('keydown', closeOnEscape);
+    document.removeEventListener('app:close-top-dialog', closeOnGlobalRequest);
 
     document.body.style.overflow = '';
 });

@@ -253,7 +253,7 @@ watch(
       </nav>
 
       <!-- Page Content -->
-      <main>
+      <main id="app-core-content" data-shortcut-scope="core">
         <slot />
       </main>
 

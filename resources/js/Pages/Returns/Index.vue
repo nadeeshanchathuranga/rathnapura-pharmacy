@@ -168,7 +168,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { Head, router } from "@inertiajs/vue3";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import ReturnDetailsModal from "./Components/ReturnDetailsModal.vue";
@@ -192,6 +192,17 @@ const selectedReturn = ref(null);
 const openCreateModal = () => {
   isCreateModalOpen.value = true;
 };
+
+onMounted(() => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("open_create") === "1") {
+    openCreateModal();
+    params.delete("open_create");
+    const queryString = params.toString();
+    const cleanUrl = `${window.location.pathname}${queryString ? `?${queryString}` : ""}${window.location.hash || ""}`;
+    window.history.replaceState({}, "", cleanUrl);
+  }
+});
 
 const openViewModal = async (returnItem) => {
   selectedReturn.value = returnItem;
