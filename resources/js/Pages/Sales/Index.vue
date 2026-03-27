@@ -1208,13 +1208,13 @@ const totalAmount = computed(() => {
 
 // Total product discounts applied
 const totalProductDiscount = computed(() => {
-  
-  const result = form.items.reduce((sum, item, index) => {    
+
+  const result = form.items.reduce((sum, item, index) => {
     if (item.discountApplied && item.originalPrice) {
       const itemDiscount = (item.originalPrice - item.price) * item.quantity;
       return sum + itemDiscount;
     }
-    
+
     return sum;
   }, 0);
   return result;
@@ -1338,14 +1338,14 @@ const addByBarcode = () => {
 const addToCart = (product) => {
   // Check if product is already in cart
   const existingIndex = form.items.findIndex((item) => item.product_id === product.id);
-  
+
   if (existingIndex !== -1) {
     // Product already in cart - remove it (toggle)
     form.items.splice(existingIndex, 1);
   } else {
     // Product not in cart - add it
     const price = getCurrentPrice(product);
-    
+
     form.items.push({
       product_id: product.id,
       product_name: product.name,
@@ -1813,11 +1813,11 @@ const printReceipt = () => {
                     box-sizing: border-box;
                 }
                 body {
-                    font-family: 'Poppins', Poppins, monospace;
+                    font-family: Arial, sans-serif;
                     font-size: 13px;
                     width: ${width};
                     margin: 0;
-                    padding: 3mm 5mm;
+                    padding: 3mm 4mm;
                     background: white;
                     color: #000;
                     line-height: 1.4;
@@ -1953,17 +1953,19 @@ const printReceipt = () => {
         <body>
             <div class="receipt-container">
                 <div class="meta-top">
-                  <div class="left">VAT No: ${bill.vat_number || "-"}</div>
-                  <div class="right">TEL: ${[bill.mobile_1, bill.mobile_2].filter(Boolean).join(" / ") || "-"}</div>
+                  <div class="left">VAT No:<br>933686833-7000</div>
+                  <div class="right">
+
+ESTD:1926
+<br>
+
+
+                    TEL: ${[bill.mobile_1, bill.mobile_2].filter(Boolean).join(" / ") || "-"}</div>
                 </div>
                 <div class="header">
-                    ${
-                      bill.logo_path
-                        ? `<div style="margin-bottom:6px;"><img src="/storage/${bill.logo_path}" alt="logo" style="max-height:40px; max-width:100%; object-fit:contain;"/></div>`
-                        : ""
-                    }
+
                   <h1>${bill.company_name || "THE RATHNAPURA STORES"}</h1>
-                  <div class="sub-title">${bill.company_tagline || "Sales Receipt"}</div>
+                  <div class="sub-title">Sports Goods Department</div>
                   <div class="address">${bill.address || "-"}</div>
                 </div>
 
@@ -1979,7 +1981,7 @@ const printReceipt = () => {
                     <thead>
                         <tr>
                       <th class="col-no">#</th>
-                      <th class="col-item">Description</th>
+                      <th class="col-item">Items</th>
                       <th class="col-qty">Qty</th>
                       <th class="col-rate">Rate</th>
                       <th class="col-total">Amount</th>
@@ -2049,6 +2051,8 @@ const printReceipt = () => {
 
                     <div class="notes">
                       <p>${bill.footer_description || "Thank you for your business."}</p>
+
+                      <p style="margin-top: 6px; font-size: 10px;">භාණ්ඩ පරීක්ෂා කර ලබා ගත් බව අත්සන ...................................................</p>
                     <p style="margin-top: 6px; font-size: 9px;">Powered by JAAN Network (PVT) Ltd</p>
                 </div>
             </div>
