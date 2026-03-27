@@ -1758,6 +1758,36 @@ const printReceipt = () => {
   const bill = props.billSetting || {};
   const rawSize = (bill.print_size || "80mm").toString();
   const width = rawSize.includes("58") ? "58mm" : "80mm";
+  const currency = page.props.currency || "Rs.";
+  const completedItemsList = completedItems.value || [];
+  const minimumTableRows = 10;
+  const emptyRowCount = Math.max(0, minimumTableRows - completedItemsList.length);
+  const itemRowsHtml = completedItemsList
+    .map(
+      (item, index) => `
+        <tr>
+          <td class="col-no">${index + 1}</td>
+          <td class="col-item">${item.product_name || "-"}</td>
+          <td class="col-qty">${item.quantity || 0}</td>
+          <td class="col-rate">${(item.price || 0).toFixed(2)}</td>
+          <td class="col-total">${((item.price || 0) * (item.quantity || 0)).toFixed(2)}</td>
+        </tr>
+      `
+    )
+    .join("");
+  const fillerRowsHtml = Array.from({ length: emptyRowCount })
+    .map(
+      () => `
+        <tr>
+          <td class="col-no">&nbsp;</td>
+          <td class="col-item">&nbsp;</td>
+          <td class="col-qty">&nbsp;</td>
+          <td class="col-rate">&nbsp;</td>
+          <td class="col-total">&nbsp;</td>
+        </tr>
+      `
+    )
+    .join("");
 
   const receiptContent = `
         <!DOCTYPE html>
@@ -1796,185 +1826,168 @@ const printReceipt = () => {
                     print-color-adjust: exact;
                 }
                 .receipt-container {
-                    width: 100%;
-                    max-width: 80mm;
+                  width: 100%;
+                  max-width: ${width};
+                }
+                .meta-top {
+                  display: flex;
+                  justify-content: space-between;
+                  font-size: 11px;
+                  margin-bottom: 4px;
+                  line-height: 1.25;
+                }
+                .meta-top .left,
+                .meta-top .right {
+                  width: 48%;
+                }
+                .meta-top .right {
+                  text-align: right;
                 }
                 .header {
-                    text-align: center;
-                    margin-bottom: 8px;
-                    padding-bottom: 8px;
-                    border-bottom: 2px dashed #000;
+                  text-align: center;
+                  margin-bottom: 6px;
                 }
                 .header h1 {
-                    font-size: 18px;
-                    font-weight: 900;
-                    margin-bottom: 4px;
-                    text-transform: uppercase;
-                    color: #000;
+                  font-size: 18px;
+                  font-weight: 900;
+                  margin-bottom: 0;
+                  text-transform: uppercase;
+                  line-height: 1.1;
                 }
-                .header p {
-                    font-size: 12px;
-                    margin: 1px 0;
-                    line-height: 1.3;
-                    font-weight: 600;
-                    color: #000;
+                .header .sub-title {
+                  font-size: 11px;
+                  margin-top: 1px;
+                  margin-bottom: 2px;
                 }
-                .info {
-                    margin: 8px 0;
-                    font-size: 12px;
-                    font-weight: 600;
-                    color: #000;
+                .header .address {
+                  font-size: 12px;
+                  font-weight: 800;
+                  line-height: 1.2;
+                  text-transform: uppercase;
                 }
-                .info-row {
-                    display: flex;
-                    justify-content: space-between;
-                    margin: 2px 0;
-                    line-height: 1.3;
-                    color: #000;
+                .identity-line {
+                  margin: 8px 0 4px;
+                  font-size: 11px;
+                  border-bottom: 1px dotted #000;
+                  height: 16px;
                 }
-
+                .bill-meta {
+                  border: 1px solid #000;
+                  border-bottom: 0;
+                  display: grid;
+                  grid-template-columns: 1fr 1fr 1fr;
+                  font-size: 11px;
+                  font-weight: 700;
+                }
+                .bill-meta div {
+                  padding: 4px 6px;
+                  border-right: 1px solid #000;
+                }
+                .bill-meta div:last-child {
+                  border-right: 0;
+                }
                 .items-table {
-                    width: 100%;
-                    margin: 8px 0;
-                    font-size: 12px;
-                    border-collapse: collapse;
-                    font-weight: 600;
-                    color: #000;
+                  width: 100%;
+                  border-collapse: collapse;
+                  border: 1px solid #000;
+                  table-layout: fixed;
+                  font-size: 11px;
                 }
-                .items-table th {
-                    text-align: left;
-                    border-bottom: 2px solid #000;
-                    padding: 3px 2px;
-                    font-weight: 800;
-                    color: #000;
+                .items-table thead th {
+                  border-bottom: 1px solid #000;
+                  border-right: 1px solid #000;
+                  text-align: center;
+                  font-weight: 800;
+                  padding: 4px 2px;
                 }
-                .items-table td {
-                    padding: 3px 2px;
-                    border-bottom: 1px dotted #000;
-                    vertical-align: top;
-                    font-weight: 600;
-                    color: #000;
+                .items-table thead th:last-child {
+                  border-right: 0;
                 }
-                .item-name {
-                    width: 38%;
-                    word-wrap: break-word;
+                .items-table tbody td {
+                  border-top: 1px dotted #444;
+                  border-right: 1px solid #000;
+                  padding: 3px 2px;
+                  height: 18px;
+                  vertical-align: middle;
+                  font-weight: 600;
                 }
-                .item-qty {
-                    width: 12%;
-                    text-align: center;
+                .items-table tbody td:last-child {
+                  border-right: 0;
                 }
-                .item-price {
-                    width: 25%;
-                    text-align: right;
-                }
-                .item-total {
-                    width: 25%;
-                    text-align: right;
-                }
+                .col-no { width: 8%; text-align: center; }
+                .col-item { width: 44%; text-align: left; word-wrap: break-word; }
+                .col-qty { width: 12%; text-align: center; }
+                .col-rate { width: 18%; text-align: right; }
+                .col-total { width: 18%; text-align: right; }
                 .totals {
-                    margin-top: 8px;
-                    font-size: 12px;
-                    font-weight: 600;
-                    color: #000;
+                  border: 1px solid #000;
+                  border-top: 0;
+                  padding: 6px;
+                  margin-top: 0;
+                  font-size: 11px;
                 }
                 .total-row {
-                    display: flex;
-                    justify-content: space-between;
-                    margin: 3px 0;
-                    line-height: 1.4;
-                    font-weight: 700;
-                    color: #000;
+                  display: flex;
+                  justify-content: space-between;
+                  margin: 2px 0;
+                  line-height: 1.35;
                 }
                 .total-row.grand {
-                    font-size: 15px;
-                    font-weight: 900;
-                    border-top: 2px solid #000;
-                    border-bottom: 2px solid #000;
-                    padding: 6px 0;
-                    margin: 8px 0;
-                    color: #000;
+                  border-top: 1px solid #000;
+                  border-bottom: 1px solid #000;
+                  padding: 4px 0;
+                  margin: 5px 0;
+                  font-size: 12px;
+                  font-weight: 900;
                 }
-                .footer {
-                    text-align: center;
-                    margin-top: 12px;
-                    padding-top: 8px;
-                    border-top: 2px dashed #000;
-                    font-size: 12px;
-                    font-weight: 600;
-                    color: #000;
-                }
-                .footer p {
-                    margin: 2px 0;
-                    line-height: 1.3;
-                    color: #000;
+                .notes {
+                  margin-top: 6px;
+                  font-size: 10px;
+                  line-height: 1.3;
+                  border-top: 1px solid #000;
+                  padding-top: 6px;
+                  text-align: center;
                 }
             </style>
         </head>
         <body>
             <div class="receipt-container">
+                <div class="meta-top">
+                  <div class="left">VAT No: ${bill.vat_number || "-"}</div>
+                  <div class="right">TEL: ${[bill.mobile_1, bill.mobile_2].filter(Boolean).join(" / ") || "-"}</div>
+                </div>
                 <div class="header">
                     ${
                       bill.logo_path
                         ? `<div style="margin-bottom:6px;"><img src="/storage/${bill.logo_path}" alt="logo" style="max-height:40px; max-width:100%; object-fit:contain;"/></div>`
                         : ""
                     }
-                    <h1>${bill.company_name || "SALES RECEIPT"}</h1>
-                    ${bill.address ? `<p>${bill.address}</p>` : ""}
-                    ${
-                      bill.mobile_1 || bill.mobile_2
-                        ? `<p>Tel: ${[bill.mobile_1, bill.mobile_2]
-                            .filter(Boolean)
-                            .join(" / ")}</p>`
-                        : ""
-                    }
-                    ${bill.email ? `<p>${bill.email}</p>` : ""}
-                    ${bill.website_url ? `<p>${bill.website_url}</p>` : ""}
+                  <h1>${bill.company_name || "THE RATHNAPURA STORES"}</h1>
+                  <div class="sub-title">${bill.company_tagline || "Sales Receipt"}</div>
+                  <div class="address">${bill.address || "-"}</div>
                 </div>
 
-                <div class="info">
-                    <div class="info-row">
-                        <span><strong>Invoice:</strong></span>
-                        <span>${completedInvoice.value}</span>
-                    </div>
-                    <div class="info-row">
-                        <span><strong>Date:</strong></span>
-                        <span>${completedSaleDate.value}</span>
-                    </div>
-                    <div class="info-row">
-                        <span><strong>Customer:</strong></span>
-                        <span>${completedCustomer.value}</span>
-                    </div>
-                    <div class="info-row">
-                        <span><strong>Payment:</strong></span>
-                        <span>${getPaymentTypeText(completedPaymentType.value, completedCardType.value)}</span>
-                    </div>
-                </div>
+                <div class="identity-line">Mr./Customer: ${completedCustomer.value || "Walk-in Customer"}</div>
 
+                <div class="bill-meta">
+                  <div>Served by: ${page.props.auth?.user?.name || "-"}</div>
+                  <div>Invoice: ${completedInvoice.value}</div>
+                  <div>Date: ${completedSaleDate.value}</div>
+                </div>
 
                 <table class="items-table">
                     <thead>
                         <tr>
-                            <th class="item-name">Item</th>
-                            <th class="item-qty">Qty</th>
-                            <th class="item-price">Price</th>
-                            <th class="item-total">Total</th>
+                      <th class="col-no">#</th>
+                      <th class="col-item">Description</th>
+                      <th class="col-qty">Qty</th>
+                      <th class="col-rate">Rate</th>
+                      <th class="col-total">Amount</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${completedItems.value
-                          .map(
-                            (item) => `
-                            <tr>
-                                <td class="item-name">${item.product_name}</td>
-                                <td class="item-qty">${item.quantity}</td>
-                                <td class="item-price">${(item.price||0).toFixed(2)}</td>
-                                <td class="item-total">${(
-                                  (item.price||0) * item.quantity
-                                ).toFixed(2)}</td>
-                            </tr>
-                        `
-                          )
-                          .join("")}
+                    ${itemRowsHtml}
+                    ${fillerRowsHtml}
                     </tbody>
                 </table>
 
@@ -1982,7 +1995,7 @@ const printReceipt = () => {
                 <div class="totals">
                     <div class="total-row">
                         <span>Subtotal:</span>
-                        <span>${page.props.currency || "Rs."} ${
+                    <span>${currency} ${
     completedTotal.value
   }</span>
                     </div>
@@ -1991,7 +2004,7 @@ const printReceipt = () => {
                         ? `
                     <div class="total-row" style="color: green;">
                         <span>Product Discounts:</span>
-                        <span>- ${page.props.currency || "Rs."} ${
+                    <span>- ${currency} ${
                             completedProductDiscount.value
                           }</span>
                     </div>
@@ -2003,7 +2016,7 @@ const printReceipt = () => {
                         ? `
                     <div class="total-row">
                         <span>Custom Discount:</span>
-                        <span>- ${page.props.currency || "Rs."} ${
+                    <span>- ${currency} ${
                             completedDiscount.value
                           }</span>
                     </div>
@@ -2011,14 +2024,14 @@ const printReceipt = () => {
                         : ""
                     }
                     <div class="total-row grand">
-                        <span>GRAND TOTAL:</span>
-                        <span>${page.props.currency || "Rs."} ${
+                    <span>NET TOTAL:</span>
+                    <span>${currency} ${
     completedNetAmount.value
   }</span>
                     </div>
                     <div class="total-row">
                         <span>Paid Amount:</span>
-                        <span>${page.props.currency || "Rs."} ${
+                    <span>${currency} ${
     completedPaid.value
   }</span>
                     </div>
@@ -2028,17 +2041,14 @@ const printReceipt = () => {
                             ? "Balance Due:"
                             : "Change:"
                         }</span>
-                        <span>${page.props.currency || "Rs."} ${Math.abs(
+                        <span>${currency} ${Math.abs(
     parseFloat(completedBalance.value)
   ).toFixed(2)}</span>
                     </div>
                 </div>
 
-                <div class="footer">
-
-                    <p>
-                        ${bill.footer_description || "Please visit us again!"}
-                        </p>
+                    <div class="notes">
+                      <p>${bill.footer_description || "Thank you for your business."}</p>
                     <p style="margin-top: 6px; font-size: 9px;">Powered by JAAN Network (PVT) Ltd</p>
                 </div>
             </div>
