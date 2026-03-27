@@ -29,8 +29,6 @@
       <form @submit.prevent="submitForm">
         <!-- GRN DETAILS -->
         <div
-          ref="grnDetailsSectionRef"
-          @keydown="handleGrnDetailsTab"
           class="mb-4 bg-white rounded-xl p-4 shadow-sm border border-gray-200"
         >
           <h3 class="mb-3 text-lg font-semibold text-blue-600 flex items-center gap-2">
@@ -161,7 +159,7 @@
               + Add Product
             </button>
           </div>
-          <div class="overflow-x-auto">
+          <div class="overflow-x-auto" data-tab-skip="true">
             <table class="w-full text-left border-collapse">
               <thead>
                 <tr class="border-b-2 border-blue-600">
@@ -420,8 +418,6 @@ const props = defineProps({
 
 const emit = defineEmits(["update:open"]);
 
-const grnDetailsSectionRef = ref(null);
-
 const createEmptyProductRow = () => ({
   product_id: null,
   measurement_unit_id: "",
@@ -597,8 +593,9 @@ const formatNumber = (number) => {
   });
 };
 
-const getGrnDetailsFocusableElements = () => {
-  if (!grnDetailsSectionRef.value) return [];
+const focusFirstElementInOpenDialog = () => {
+  const openDialog = document.querySelector("dialog[open]");
+  if (!(openDialog instanceof HTMLElement)) return;
 
   const selectors = [
     'input:not([type="hidden"]):not([disabled])',
@@ -606,37 +603,16 @@ const getGrnDetailsFocusableElements = () => {
     'textarea:not([disabled])',
     'button:not([disabled])',
     '[tabindex]:not([tabindex="-1"])',
-  ].join(', ');
+    '[contenteditable="true"]',
+  ].join(", ");
 
-  return Array.from(grnDetailsSectionRef.value.querySelectorAll(selectors)).filter(
-    (element) => {
-      const htmlElement = element;
-      return htmlElement.offsetParent !== null;
-    }
+  const firstFocusable = Array.from(openDialog.querySelectorAll(selectors)).find(
+    (element) => element instanceof HTMLElement && element.offsetParent !== null
   );
-};
 
-const handleGrnDetailsTab = (event) => {
-  if (event.key !== "Tab") return;
-
-  const focusableElements = getGrnDetailsFocusableElements();
-
-  if (focusableElements.length === 0) return;
-
-  const currentIndex = focusableElements.indexOf(document.activeElement);
-  const movingBackward = event.shiftKey;
-
-  let nextIndex;
-  if (currentIndex === -1) {
-    nextIndex = movingBackward ? focusableElements.length - 1 : 0;
-  } else {
-    nextIndex = movingBackward
-      ? (currentIndex - 1 + focusableElements.length) % focusableElements.length
-      : (currentIndex + 1) % focusableElements.length;
+  if (firstFocusable instanceof HTMLElement) {
+    firstFocusable.focus();
   }
-
-  event.preventDefault();
-  focusableElements[nextIndex]?.focus();
 };
 
 // Reset form when modal opens
@@ -646,7 +622,7 @@ watch(
     if (newVal) {
       resetForm();
       nextTick(() => {
-        getGrnDetailsFocusableElements()[0]?.focus();
+        focusFirstElementInOpenDialog();
       });
     }
   }

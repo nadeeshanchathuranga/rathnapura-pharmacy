@@ -168,8 +168,12 @@ const getFocusableElements = (rootElement) => {
         '[contenteditable="true"]',
     ].join(', ');
 
-    return Array.from(rootElement.querySelectorAll(selectors)).filter((element) => {
+    const focusableCandidates = Array.from(rootElement.querySelectorAll(selectors)).filter((element) => {
         if (!(element instanceof HTMLElement)) {
+            return false;
+        }
+
+        if (element.closest('[data-tab-skip="true"]')) {
             return false;
         }
 
@@ -179,6 +183,28 @@ const getFocusableElements = (rootElement) => {
 
         return element.tabIndex >= 0;
     });
+
+    return focusableCandidates
+        .map((element, domIndex) => ({
+            element,
+            domIndex,
+            tabIndex: element.tabIndex,
+        }))
+        .sort((firstItem, secondItem) => {
+            const firstPositive = firstItem.tabIndex > 0;
+            const secondPositive = secondItem.tabIndex > 0;
+
+            if (firstPositive && secondPositive) {
+                return firstItem.tabIndex - secondItem.tabIndex || firstItem.domIndex - secondItem.domIndex;
+            }
+
+            if (firstPositive !== secondPositive) {
+                return firstPositive ? -1 : 1;
+            }
+
+            return firstItem.domIndex - secondItem.domIndex;
+        })
+        .map((item) => item.element);
 };
 
 const focusFirstElementIn = (rootElement) => {
