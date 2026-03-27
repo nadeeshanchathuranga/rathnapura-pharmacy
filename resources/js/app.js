@@ -87,9 +87,27 @@ const isInHeader = (target) => {
     return target.closest('nav,[data-shortcut-exclude]') !== null;
 };
 
-const hasOpenDialog = () => document.querySelector('dialog[open]') !== null;
+const getOpenDialogElement = () => {
+    const openDialogElements = Array.from(document.querySelectorAll('dialog[open]'));
 
-const getOpenDialogElement = () => document.querySelector('dialog[open]');
+    for (let index = openDialogElements.length - 1; index >= 0; index -= 1) {
+        const dialogElement = openDialogElements[index];
+
+        if (!(dialogElement instanceof HTMLDialogElement)) {
+            continue;
+        }
+
+        if (dialogElement.getAttribute('data-modal-active') === 'false') {
+            continue;
+        }
+
+        return dialogElement;
+    }
+
+    return null;
+};
+
+const hasOpenDialog = () => getOpenDialogElement() !== null;
 
 const getHomeUrl = () => {
     try {
@@ -243,6 +261,10 @@ const trapTabWithinScope = (event) => {
     const focusableElements = getFocusableElements(scopeRoot);
 
     if (focusableElements.length === 0) {
+        if (!dialogElement) {
+            return false;
+        }
+
         event.preventDefault();
 
         focusFirstElementIn(scopeRoot);
@@ -362,6 +384,88 @@ const clearSelectNavigationState = () => {
 
     selectNavigationState.active = false;
     selectNavigationState.element = null;
+};
+
+const hasUsableSelectNavigationState = () => {
+    const selectElement = selectNavigationState.element;
+
+    if (!selectNavigationState.active || !(selectElement instanceof HTMLSelectElement)) {
+        return false;
+    }
+
+    if (!selectElement.isConnected || !document.contains(selectElement) || selectElement.disabled || !isVisible(selectElement)) {
+        clearSelectNavigationState();
+        return false;
+    }
+
+    return true;
+};
+
+const resetKeyboardTransientState = () => {
+    clearSelectNavigationState();
+};
+
+const navigateToDashboardIfNeeded = () => {
+    const homeUrl = getHomeUrl();
+    const resolvedHomeUrl = new URL(homeUrl, window.location.origin);
+    const currentPathWithSearch = window.location.pathname + window.location.search;
+    const homePathWithSearch = resolvedHomeUrl.pathname + resolvedHomeUrl.search;
+
+    if (currentPathWithSearch !== homePathWithSearch) {
+        window.location.assign(homeUrl);
+    }
+};
+
+const navigateToPosIfNeeded = () => {
+    let posUrl = '/sales';
+
+    try {
+        if (typeof window.route === 'function') {
+            posUrl = window.route('sales.index');
+        }
+    } catch {
+        posUrl = '/sales';
+    }
+
+    const resolvedPosUrl = new URL(posUrl, window.location.origin);
+    const currentPathWithSearch = window.location.pathname + window.location.search;
+    const posPathWithSearch = resolvedPosUrl.pathname + resolvedPosUrl.search;
+
+    if (currentPathWithSearch !== posPathWithSearch) {
+        window.location.assign(posUrl);
+    }
+};
+
+const handleGlobalEscapeNavigation = (event) => {
+    const shortcutKey = normalizeShortcutKey(event);
+
+    if (shortcutKey !== 'Escape') {
+        return;
+    }
+
+    if (event.ctrlKey || event.metaKey || event.altKey) {
+        return;
+    }
+
+    consumeEvent(event);
+    resetKeyboardTransientState();
+    navigateToDashboardIfNeeded();
+};
+
+const handleGlobalPosNavigation = (event) => {
+    const shortcutKey = normalizeShortcutKey(event);
+
+    if (shortcutKey !== 'F5') {
+        return;
+    }
+
+    if (event.ctrlKey || event.metaKey || event.altKey) {
+        return;
+    }
+
+    consumeEvent(event);
+    resetKeyboardTransientState();
+    navigateToPosIfNeeded();
 };
 
 const activateSelectNavigationState = (selectElement) => {
@@ -512,12 +616,21 @@ if (!window.__globalShortcutManagerInitialized) {
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
             void lockFunctionKeysIfSupported();
+            resetKeyboardTransientState();
         }
     });
 
     window.addEventListener('focus', () => {
         void lockFunctionKeysIfSupported();
+        resetKeyboardTransientState();
     });
+
+    window.addEventListener('pageshow', resetKeyboardTransientState);
+    document.addEventListener('inertia:start', resetKeyboardTransientState);
+    document.addEventListener('inertia:finish', resetKeyboardTransientState);
+    document.addEventListener('inertia:navigate', resetKeyboardTransientState);
+    window.addEventListener('keydown', handleGlobalEscapeNavigation, true);
+    window.addEventListener('keydown', handleGlobalPosNavigation, true);
 
     window.addEventListener('keydown', (event) => {
         const shortcutKey = normalizeShortcutKey(event);
@@ -538,7 +651,7 @@ if (!window.__globalShortcutManagerInitialized) {
         const eventTarget = event.target instanceof HTMLElement ? event.target : document.activeElement;
 
         if (shortcutKey === 'Tab') {
-            if (selectNavigationState.active && selectNavigationState.element) {
+            if (hasUsableSelectNavigationState()) {
                 consumeEvent(event);
 
                 const direction = event.shiftKey ? -1 : 1;
@@ -547,17 +660,6 @@ if (!window.__globalShortcutManagerInitialized) {
             }
 
             trapTabWithinScope(event);
-            return;
-        }
-
-        if (shortcutKey === 'Escape') {
-            consumeEvent(event);
-
-            const homeUrl = getHomeUrl();
-            if (window.location.pathname + window.location.search !== new URL(homeUrl, window.location.origin).pathname + new URL(homeUrl, window.location.origin).search) {
-                window.location.assign(homeUrl);
-            }
-
             return;
         }
 
@@ -585,7 +687,7 @@ if (!window.__globalShortcutManagerInitialized) {
             return;
         }
 
-        if (shortcutKey === 'Enter' && selectNavigationState.active && selectNavigationState.element) {
+        if (shortcutKey === 'Enter' && hasUsableSelectNavigationState()) {
             consumeEvent(event);
             confirmSelectOption(selectNavigationState.element);
             clearSelectNavigationState();
@@ -601,7 +703,7 @@ if (!window.__globalShortcutManagerInitialized) {
             return;
         }
 
-        if ((shortcutKey === 'ArrowDown' || shortcutKey === 'ArrowUp') && selectNavigationState.active && selectNavigationState.element) {
+        if ((shortcutKey === 'ArrowDown' || shortcutKey === 'ArrowUp') && hasUsableSelectNavigationState()) {
             consumeEvent(event);
             moveSelectOption(selectNavigationState.element, shortcutKey === 'ArrowDown' ? 1 : -1);
             return;

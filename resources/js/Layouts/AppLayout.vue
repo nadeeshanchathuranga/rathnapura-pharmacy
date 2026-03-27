@@ -147,7 +147,7 @@ watch(
                 class="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-lg border border-blue-600 bg-blue-600 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-blue-700 hover:border-blue-700 hover:shadow-lg hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 <span class="text-lg">🏪</span>
-                <span>POS</span>
+                <span>POS (F5)</span>
               </Link>
 
               <!-- Logout Button -->
