@@ -11,6 +11,7 @@ export default defineConfig({
     plugins: [
         laravel({
             input: 'resources/js/app.js',
+            detectTls: false,
             refresh: [
                 'resources/routes/**',
                 'resources/views/**',

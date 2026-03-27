@@ -28,7 +28,11 @@
 
       <form @submit.prevent="submitForm">
         <!-- GRN DETAILS -->
-        <div class="mb-4 bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+        <div
+          ref="grnDetailsSectionRef"
+          @keydown="handleGrnDetailsTab"
+          class="mb-4 bg-white rounded-xl p-4 shadow-sm border border-gray-200"
+        >
           <h3 class="mb-3 text-lg font-semibold text-blue-600 flex items-center gap-2">
             📋 GRN Details
           </h3>
@@ -396,7 +400,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, nextTick } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
 import Modal from "@/Components/Modal.vue";
 const page = usePage();
@@ -415,6 +419,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["update:open"]);
+
+const grnDetailsSectionRef = ref(null);
 
 const createEmptyProductRow = () => ({
   product_id: null,
@@ -591,12 +597,57 @@ const formatNumber = (number) => {
   });
 };
 
+const getGrnDetailsFocusableElements = () => {
+  if (!grnDetailsSectionRef.value) return [];
+
+  const selectors = [
+    'input:not([type="hidden"]):not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    'button:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])',
+  ].join(', ');
+
+  return Array.from(grnDetailsSectionRef.value.querySelectorAll(selectors)).filter(
+    (element) => {
+      const htmlElement = element;
+      return htmlElement.offsetParent !== null;
+    }
+  );
+};
+
+const handleGrnDetailsTab = (event) => {
+  if (event.key !== "Tab") return;
+
+  const focusableElements = getGrnDetailsFocusableElements();
+
+  if (focusableElements.length === 0) return;
+
+  const currentIndex = focusableElements.indexOf(document.activeElement);
+  const movingBackward = event.shiftKey;
+
+  let nextIndex;
+  if (currentIndex === -1) {
+    nextIndex = movingBackward ? focusableElements.length - 1 : 0;
+  } else {
+    nextIndex = movingBackward
+      ? (currentIndex - 1 + focusableElements.length) % focusableElements.length
+      : (currentIndex + 1) % focusableElements.length;
+  }
+
+  event.preventDefault();
+  focusableElements[nextIndex]?.focus();
+};
+
 // Reset form when modal opens
 watch(
   () => props.open,
   (newVal) => {
     if (newVal) {
       resetForm();
+      nextTick(() => {
+        getGrnDetailsFocusableElements()[0]?.focus();
+      });
     }
   }
 );
