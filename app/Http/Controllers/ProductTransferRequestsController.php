@@ -64,11 +64,12 @@ class ProductTransferRequestsController extends Controller
             ]);
 
             foreach ($validated['products'] as $productData) {
+                $unitId = !empty($productData['unit_id']) ? $productData['unit_id'] : null;
                 ProductTransferRequestProduct::create([
                     'product_transfer_request_id' => $productTransferRequest->id,
                     'product_id' => $productData['product_id'],
                     'requested_quantity' => $productData['requested_quantity'],
-                    'unit_id' => $productData['unit_id'] ?? null
+                    'unit_id' => $unitId,
                 ]);
             }
 
@@ -90,7 +91,7 @@ class ProductTransferRequestsController extends Controller
                     
                     if ($product) {
                         $quantity = (float)$productData['requested_quantity'];
-                        $unitId = $productData['unit_id'] ?? null;
+                        $unitId = !empty($productData['unit_id']) ? $productData['unit_id'] : null;
                         
                         $purchaseToTransferRate = $product->purchase_to_transfer_rate ?? 1;
                         $transferToSalesRate = $product->transfer_to_sales_rate ?? 1;
@@ -161,11 +162,13 @@ class ProductTransferRequestsController extends Controller
                             ->increment('shop_quantity_in_sales_unit', $quantityInSalesUnits);
                         
                         // Track shop stock by specific unit for accurate returns
-                        ShopStockByUnit::addStock(
-                            $productData['product_id'],
-                            $unitId,
-                            $quantity
-                        );
+                        if ($unitId !== null) {
+                            ShopStockByUnit::addStock(
+                                $productData['product_id'],
+                                $unitId,
+                                $quantity
+                            );
+                        }
                         
                         // Deduct from product_available_quantities table using FIFO (oldest first)
                         $availableQuantities = \App\Models\ProductAvailableQuantity::where('product_id', $product->id)
@@ -321,7 +324,7 @@ class ProductTransferRequestsController extends Controller
                     'product_transfer_request_id' => $productTransferRequest->id,
                     'product_id' => $product['product_id'],
                     'requested_quantity' => $product['requested_quantity'],
-                    'unit_id' => $product['unit_id'] ?? null
+                    'unit_id' => !empty($product['unit_id']) ? $product['unit_id'] : null,
                 ]);
             }
 
@@ -356,26 +359,155 @@ class ProductTransferRequestsController extends Controller
             return back()->withErrors(['error' => 'Unauthorized. Only admin users can change the status.']);
         }
 
-        // Prevent any changes if the PTR is already approved
-        if ($productTransferRequest->status === 'approved') {
-            return back()->withErrors(['error' => 'Cannot change status of an already approved request.']);
+        // Prevent any changes if the PTR is already completed/approved
+        if (in_array($productTransferRequest->status, ['approved', 'completed'])) {
+            return back()->withErrors(['error' => 'Cannot change status of an already approved/completed request.']);
         }
 
         DB::beginTransaction();
 
         try {
-            $oldStatus = $productTransferRequest->status;
             $newStatus = $request->status;
 
-            // Note: Stock is NOT transferred here.
-            // Stock movement only happens when PRN (Product Release Note) is created.
-            // PTR approval is just an authorization, not actual goods movement.
+            if ($newStatus === 'approved') {
+                // Create PRN and perform actual stock transfer
+                $prn = \App\Models\ProductReleaseNote::create([
+                    'product_transfer_request_id' => $productTransferRequest->id,
+                    'user_id' => Auth::id(),
+                    'release_date' => now()->toDateString(),
+                    'status' => 1,
+                    'remark' => 'Generated from PTR approval by admin',
+                ]);
 
-            $productTransferRequest->update(['status' => $newStatus]);
+                foreach ($productTransferRequest->product_transfer_request_products as $item) {
+                    $product = Product::find($item->product_id);
+                    if (!$product) continue;
+
+                    $quantity = (float) $item->requested_quantity;
+                    $unitId   = !empty($item->unit_id) ? $item->unit_id : null;
+                    $purchaseToTransferRate = $product->purchase_to_transfer_rate ?? 1;
+                    $transferToSalesRate    = $product->transfer_to_sales_rate ?? 1;
+
+                    // Convert requested quantity to bundles
+                    $quantityInBundles = $quantity;
+                    if ($unitId == $product->purchase_unit_id) {
+                        $quantityInBundles = $quantity * $purchaseToTransferRate;
+                    } elseif ($unitId == $product->sales_unit_id) {
+                        $quantityInBundles = $transferToSalesRate > 0 ? $quantity / $transferToSalesRate : 0;
+                    }
+
+                    // Check store stock
+                    $dbRecord         = DB::table('products')->where('id', $product->id)->first();
+                    $currentBoxes     = $dbRecord->store_quantity_in_purchase_unit ?? 0;
+                    $currentLoose     = $dbRecord->store_quantity_in_transfer_unit ?? 0;
+                    $totalAvailable   = ($currentBoxes * $purchaseToTransferRate) + $currentLoose;
+
+                    if ($totalAvailable < $quantityInBundles) {
+                        DB::rollBack();
+                        return back()->withErrors([
+                            'error' => "Insufficient store quantity for product: {$product->name}. Available: {$totalAvailable} bundles, Required: {$quantityInBundles} bundles"
+                        ]);
+                    }
+
+                    // Calculate new store quantities
+                    $remainingBundles = $totalAvailable - $quantityInBundles;
+                    $newBoxes         = floor($remainingBundles / $purchaseToTransferRate);
+                    $newLoose         = $remainingBundles - ($newBoxes * $purchaseToTransferRate);
+                    $purchaseDiff     = $currentBoxes - $newBoxes;
+                    $looseDiff        = $currentLoose - $newLoose;
+
+                    if ($purchaseDiff > 0) {
+                        DB::table('products')->where('id', $product->id)->decrement('store_quantity_in_purchase_unit', $purchaseDiff);
+                    } elseif ($purchaseDiff < 0) {
+                        DB::table('products')->where('id', $product->id)->increment('store_quantity_in_purchase_unit', abs($purchaseDiff));
+                    }
+                    if ($looseDiff > 0) {
+                        DB::table('products')->where('id', $product->id)->decrement('store_quantity_in_transfer_unit', $looseDiff);
+                    } elseif ($looseDiff < 0) {
+                        DB::table('products')->where('id', $product->id)->increment('store_quantity_in_transfer_unit', abs($looseDiff));
+                    }
+
+                    // Add to shop
+                    $quantityInSalesUnits = $quantityInBundles * $transferToSalesRate;
+                    DB::table('products')->where('id', $product->id)->increment('shop_quantity_in_sales_unit', $quantityInSalesUnits);
+
+                    if ($unitId !== null) {
+                        ShopStockByUnit::addStock($item->product_id, $unitId, $quantity);
+                    }
+
+                    // FIFO deduction from product_available_quantities
+                    $qtyBundles = 0; $qtySales = 0;
+                    if ($unitId == $product->purchase_unit_id) {
+                        $qtyBundles = $quantity * $purchaseToTransferRate;
+                    } elseif ($unitId == $product->transfer_unit_id) {
+                        $qtyBundles = $quantity;
+                    } elseif ($unitId == $product->sales_unit_id) {
+                        $qtyBundles = floor($quantity / $transferToSalesRate);
+                        $qtySales   = $quantity % $transferToSalesRate;
+                    }
+                    $boxesToDeduct    = floor($qtyBundles / $purchaseToTransferRate);
+                    $bundlesToDeduct  = $qtyBundles % $purchaseToTransferRate;
+
+                    $availableQtys = \App\Models\ProductAvailableQuantity::where('product_id', $product->id)
+                        ->orderBy('created_at', 'asc')->get();
+
+                    foreach ($availableQtys as $aq) {
+                        if ($boxesToDeduct <= 0 && $bundlesToDeduct <= 0 && $qtySales <= 0) break;
+                        if ($boxesToDeduct > 0) {
+                            $d = min($boxesToDeduct, $aq->available_quantity);
+                            $aq->decrement('available_quantity', $d);
+                            $boxesToDeduct -= $d;
+                        }
+                        if ($bundlesToDeduct > 0) {
+                            $d = min($bundlesToDeduct, $aq->quantity_in_transfer_unit);
+                            $aq->decrement('quantity_in_transfer_unit', $d);
+                            $bundlesToDeduct -= $d;
+                        }
+                        if ($qtySales > 0) {
+                            $d = min($qtySales, $aq->quantity_in_sales_unit);
+                            $aq->decrement('quantity_in_sales_unit', $d);
+                            $qtySales -= $d;
+                        }
+                        if ($aq->available_quantity <= 0 && $aq->quantity_in_transfer_unit <= 0 && $aq->quantity_in_sales_unit <= 0) {
+                            $aq->delete();
+                        } else {
+                            $aq->save();
+                        }
+                    }
+
+                    // Unit price for PRN record
+                    $unitPrice = 0;
+                    if ($unitId == $product->purchase_unit_id) {
+                        $unitPrice = DB::table('goods_received_notes_products')->where('product_id', $item->product_id)->latest('created_at')->value('purchase_price') ?? $product->purchase_price ?? 0;
+                    } elseif ($unitId == $product->transfer_unit_id) {
+                        $pp = DB::table('goods_received_notes_products')->where('product_id', $item->product_id)->latest('created_at')->value('purchase_price') ?? $product->purchase_price ?? 0;
+                        $unitPrice = ((float)$pp) / ((float)($product->purchase_to_transfer_rate ?? 1));
+                    } elseif ($unitId == $product->sales_unit_id) {
+                        $unitPrice = $product->retail_price ?? 0;
+                    } else {
+                        $unitPrice = DB::table('goods_received_notes_products')->where('product_id', $item->product_id)->latest('created_at')->value('purchase_price') ?? $product->purchase_price ?? 0;
+                    }
+
+                    \App\Models\ProductReleaseNoteProduct::create([
+                        'product_release_note_id' => $prn->id,
+                        'product_id' => $item->product_id,
+                        'unit_id'    => $unitId,
+                        'quantity'   => $quantity,
+                        'unit_price' => (float)$unitPrice,
+                        'total'      => $quantity * (float)$unitPrice,
+                    ]);
+                }
+
+                $productTransferRequest->update(['status' => 'completed']);
+            } else {
+                $productTransferRequest->update(['status' => $newStatus]);
+            }
 
             DB::commit();
 
-            return back()->with('success', 'Status updated successfully and stock transferred');
+            return back()->with('success', $newStatus === 'approved'
+                ? 'Request approved and stock transferred successfully'
+                : 'Status updated successfully');
 
         } catch (\Exception $e) {
             DB::rollBack();

@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register role-based middleware
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'division' => \App\Http\Middleware\DivisionMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

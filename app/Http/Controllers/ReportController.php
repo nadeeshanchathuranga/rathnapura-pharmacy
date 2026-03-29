@@ -1082,9 +1082,11 @@ class ReportController extends Controller
     {
         $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
+        $divisionId = $request->input('division_id');
         $currencySymbol  = CompanyInformation::first();
 
-        $productSalesReport = Product::select('id', 'name', 'barcode')
+        $productSalesReport = Product::select('id', 'name', 'barcode', 'division_id')
+            ->when($divisionId, fn($q) => $q->where('division_id', $divisionId))
             ->with([
                 'salesProducts' => function($query) use ($startDate, $endDate) {
                     $query->select('id', 'product_id', 'quantity', 'price', 'total', 'sale_id')
@@ -1126,11 +1128,15 @@ class ReportController extends Controller
             })
             ->values();
 
+        $divisions = \App\Models\Division::active()->get(['id', 'name', 'slug']);
+
         return Inertia::render('Reports/ProductSalesReport', [
             'productSalesReport' => $productSalesReport,
             'startDate' => $startDate,
             'endDate' => $endDate,
             'currencySymbol' => $currencySymbol,
+            'divisions' => $divisions,
+            'divisionId' => $divisionId,
         ]);
     }
 

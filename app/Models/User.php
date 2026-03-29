@@ -22,6 +22,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'division_id',
+        'is_active',
     ];
 
     /**
@@ -44,7 +46,13 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
+    }
+
+    public function division()
+    {
+        return $this->belongsTo(Division::class);
     }
 
     /**
@@ -59,11 +67,41 @@ class User extends Authenticatable
 
     /**
      * Check if the user is an admin.
-     *
-     * @return bool
      */
     public function isAdmin(): bool
     {
-        return $this->role === 0; // Admin role is 0
+        return $this->role === 0;
+    }
+
+    /**
+     * Check if the user is backoffice.
+     */
+    public function isBackoffice(): bool
+    {
+        return $this->role === 1;
+    }
+
+    /**
+     * Check if the user is a cashier.
+     */
+    public function isCashier(): bool
+    {
+        return $this->role === 2;
+    }
+
+    /**
+     * Check if user belongs to a specific division.
+     */
+    public function hasDivision(): bool
+    {
+        return !is_null($this->division_id);
+    }
+
+    /**
+     * Get the division name attribute.
+     */
+    public function getDivisionNameAttribute(): ?string
+    {
+        return $this->division?->name;
     }
 }

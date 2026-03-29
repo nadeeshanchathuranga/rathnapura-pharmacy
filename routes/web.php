@@ -262,6 +262,7 @@ Route::middleware(['auth', 'role:0,1,2,3'])->group(function () {
         Route::post('/', [GoodReceiveNoteController::class, 'store'])->name('store');
         Route::patch('/{goodsReceivedNote}', [GoodReceiveNoteController::class, 'update'])->name('update');
         Route::patch('/{goodsReceivedNote}/status', [GoodReceiveNoteController::class, 'updateStatus'])->name('update-status');
+        Route::patch('/{goodsReceivedNote}/approve', [GoodReceiveNoteController::class, 'approve'])->name('approve');
         Route::delete('/{goodsReceivedNote}', [GoodReceiveNoteController::class, 'destroy'])->name('destroy');
     });
 
@@ -417,10 +418,10 @@ Route::middleware(['auth', 'role:0,1,2,3'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Sales Report Routes - Admin, Manager & Cashier (user_type: 0,1,2)
+| Sales Report Routes - Admin ONLY (user_type: 0)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:0,1,2'])->group(function () {
+Route::middleware(['auth', 'role:0'])->group(function () {
     Route::prefix('reports')->name('reports.')->group(function () {
         // Sales Report - Sales by type with income
         Route::get('/sales', [ReportController::class, 'salesReport'])->name('sales');

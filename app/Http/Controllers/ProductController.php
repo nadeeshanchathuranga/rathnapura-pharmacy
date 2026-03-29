@@ -13,6 +13,7 @@ use App\Models\Tax;
 use App\Models\ActivityLog;
 use App\Models\ProductAvailableQuantity;
 use App\Models\GoodsReceivedNoteProduct;
+use App\Models\Division;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
@@ -36,9 +37,10 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::select([
+        $user = auth()->user();
+        $productQuery = Product::select([
             'id',
             'name',
             'barcode',
@@ -64,6 +66,7 @@ class ProductController extends Controller
             'return_product',
             'status',
             'image',
+            'division_id',
             'created_at',
             'updated_at'
         ])->with([
@@ -75,10 +78,19 @@ class ProductController extends Controller
             'purchaseUnit',
             'salesUnit',
             'transferUnit',
-            'shopStockByUnit.measurementUnit'
-        ])
-        ->orderBy('id', 'desc')
-        ->paginate(10);
+            'shopStockByUnit.measurementUnit',
+            'division'
+        ]);
+
+        // Cashiers (role=2) only see their division's products
+        if ($user->role === 2 && $user->division_id) {
+            $productQuery->where('division_id', $user->division_id);
+        } elseif ($request->filled('division_filter') && in_array($user->role, [0, 1])) {
+            // Admin/Backoffice may filter by division
+            $productQuery->where('division_id', $request->division_filter);
+        }
+
+        $products = $productQuery->orderBy('id', 'desc')->paginate(10);
 
         // Load available quantities for each product from product_available_quantities table in FIFO order
         $availableQuantities = ProductAvailableQuantity::select('product_id', 'batch_number', 'available_quantity', 'unit_id', 'created_at')
@@ -124,6 +136,7 @@ class ProductController extends Controller
             ->get();
 
         $currencySymbol = CompanyInformation::first();
+        $divisions = Division::active()->get(['id', 'name', 'slug']);
         return Inertia::render('Products/Index', [
             'products' => $products,
             'brands' => $brands,
@@ -133,6 +146,8 @@ class ProductController extends Controller
             'discounts' => $discounts,
             'currencySymbol' => $currencySymbol,
             'taxes' => $taxes,
+            'divisions' => $divisions,
+            'divisionFilter' => $request->division_filter,
         ]);
     }
 
@@ -192,6 +207,7 @@ class ProductController extends Controller
         'transfer_to_sales_rate' => 'nullable|numeric|min:0',
 
         'status' => 'nullable|integer|in:0,1',
+        'division_id' => 'nullable|exists:divisions,id',
 
         'image' => 'nullable|image',
     ]);
@@ -279,6 +295,7 @@ class ProductController extends Controller
             'purchase_to_transfer_rate' => 'nullable|numeric|min:0',
             'transfer_to_sales_rate' => 'nullable|numeric|min:0',
             'status' => 'nullable|integer|in:0,1',
+            'division_id' => 'nullable|exists:divisions,id',
             'image' => 'nullable|image',
         ]);
 

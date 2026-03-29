@@ -200,6 +200,23 @@
                 <option value="0">Inactive</option>
               </select>
             </div>
+
+            <!-- Division -->
+            <div>
+              <label class="block mb-2 text-sm font-medium text-gray-700">
+                Division <span class="text-red-500">*</span>
+              </label>
+              <select
+                v-model="form.division_id"
+                class="w-full px-3 py-2 text-sm text-gray-800 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              >
+                <option value="">-- Select Division --</option>
+                <option v-for="division in divisions" :key="division.id" :value="division.id">
+                  {{ division.name }}
+                </option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -811,6 +828,10 @@ const props = defineProps({
   customers: Array,
   discounts: Array,
   taxes: Array,
+  divisions: {
+    type: Array,
+    default: () => [],
+  },
 });
 
 const emit = defineEmits(["update:open"]);
@@ -841,6 +862,7 @@ const form = useForm({
   purchase_to_transfer_rate: null,
   transfer_to_sales_rate: null,
   status: 1,
+  division_id: "",
   image: null,
 });
 
@@ -1001,6 +1023,7 @@ const submit = () => {
     purchase_to_transfer_rate: form.purchase_to_transfer_rate,
     transfer_to_sales_rate: form.transfer_to_sales_rate,
     status: form.status,
+    division_id: form.division_id || null,
     image: form.image,
     discount_value: form.discount_value,
     discount_type: form.discount_type,

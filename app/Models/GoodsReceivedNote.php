@@ -25,6 +25,7 @@ class GoodsReceivedNote extends Model
         'tax_total',
         'remarks',
         'status',
+        'approval_status',
     ];
 
     public function goods_received_note_products()

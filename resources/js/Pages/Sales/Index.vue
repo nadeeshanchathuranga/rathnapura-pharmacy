@@ -1758,6 +1758,18 @@ const printReceipt = () => {
   const bill = props.billSetting || {};
   const rawSize = (bill.print_size || "80mm").toString();
   const width = rawSize.includes("58") ? "58mm" : "80mm";
+  const authUser = page.props.auth?.user;
+  const userDivision = authUser?.division;
+  const divisionName = userDivision?.name || null;
+  // Department subtitle: show division dept if cashier, otherwise nothing
+  const deptSubtitle = divisionName ? `${divisionName} Department` : '';
+  // Footer note varies by division slug
+  const divisionSlug = userDivision?.slug || '';
+  const divisionFooter = divisionSlug === 'sports'
+    ? 'සැ:යු: භාණ්ඩ අලෙවි කිරීමෙන් පසු නැවත මාරු කිරීමක් හෝ නැවත මුදල් ලබා දීමක් සිදුනොවන බව කාරුණිකව දන්වමි.'
+    : (divisionSlug === 'pharmacy'
+        ? 'Medicines cannot be returned or exchanged after purchase. Please check your items carefully before leaving.'
+        : (bill.footer_description || 'Thank you for your business.'));
   const currency = page.props.currency || "Rs.";
   const completedItemsList = completedItems.value || [];
   const minimumTableRows = 10;
@@ -1964,9 +1976,9 @@ ESTD:1926
                 </div>
                 <div class="header">
 
-                  <h1>${bill.company_name || "THE RATHNAPURA STORES"}</h1>
-                  <div class="sub-title">Sports Goods Department</div>
-                  <div class="address">${bill.address || "-"}</div>
+                  <h1>${bill.company_name || "THE RATNAPURA STORES"}</h1>
+                  ${deptSubtitle ? `<div class="sub-title">${deptSubtitle}</div>` : ''}
+                  <div class="address">${bill.address || "57, MAIN STREET, RATNAPURA."}</div>
                 </div>
 
                 <div class="identity-line">Mr./Customer: ${completedCustomer.value || "Walk-in Customer"}</div>
@@ -2050,9 +2062,8 @@ ESTD:1926
                 </div>
 
                     <div class="notes">
-                      <p>${bill.footer_description || "Thank you for your business."}</p>
-
-                      <p style="margin-top: 6px; font-size: 10px;">භාණ්ඩ පරීක්ෂා කර ලබා ගත් බව අත්සන ...................................................</p>
+                      <p style="margin-top: 8px; font-size: 10px; text-align: left;">${divisionFooter}</p>
+                    <p style="margin-top: 8px; font-size: 10px; text-align: left;">භාණ්ඩ පරීශාකර ලබා ගත් බවට අත්සන .....................................</p>
                     <p style="margin-top: 6px; font-size: 9px;">Powered by JAAN Network (PVT) Ltd</p>
                 </div>
             </div>

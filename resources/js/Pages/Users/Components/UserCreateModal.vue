@@ -90,12 +90,31 @@
                     required
                   >
                     <option value="0">Admin</option>
-                    <option value="1">Manager</option>
+                    <option value="1">Backoffice</option>
                     <option value="2">Cashier</option>
-                    <option value="3">Stock Keeper</option>
                   </select>
                   <p v-if="form.errors.role" class="mt-1 text-sm text-red-600">
                     {{ form.errors.role }}
+                  </p>
+                </div>
+
+                <!-- Division dropdown - shown for Backoffice and Cashier -->
+                <div class="mb-4" v-if="form.role == '1' || form.role == '2'">
+                  <label class="block mb-2 text-sm font-medium text-gray-700">
+                    Division <span v-if="form.role == '2'" class="text-red-500">*</span>
+                  </label>
+                  <select
+                    v-model="form.division_id"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    :required="form.role == '2'"
+                  >
+                    <option value="">-- Select Division --</option>
+                    <option v-for="division in divisions" :key="division.id" :value="division.id">
+                      {{ division.name }}
+                    </option>
+                  </select>
+                  <p v-if="form.errors.division_id" class="mt-1 text-sm text-red-600">
+                    {{ form.errors.division_id }}
                   </p>
                 </div>
 
@@ -125,7 +144,8 @@
 </template>
 
 <script setup>
-import { useForm } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import {
   TransitionRoot,
   TransitionChild,
@@ -141,11 +161,15 @@ const props = defineProps({
 
 const emit = defineEmits(['update:open']);
 
+const divisions = computed(() => usePage().props.divisions || []);
+
 const form = useForm({
   name: '',
   email: '',
   password: '',
-  role: '0',
+  role: '1',
+  division_id: '',
+  is_active: true,
 });
 
 const submit = () => {

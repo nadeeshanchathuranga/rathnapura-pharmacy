@@ -24,6 +24,7 @@ class Sale extends Model
         'type',
         'customer_id',
         'user_id',
+        'division_id',
         'total_amount',
         'discount',
         'net_amount',

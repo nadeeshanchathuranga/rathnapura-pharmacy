@@ -17,36 +17,28 @@ class UserSeeder extends Seeder
         $pass = '123456789';
 
         // Admin User - Full Access
-        User::create([
-            'name' => 'Admin',
-            'email' => 'admin@gmail.com',
-            'password' => bcrypt($pass),
-            'role' => 0,
-        ]);
+        User::firstOrCreate(
+            ['email' => 'admin@gmail.com'],
+            ['name' => 'Admin', 'password' => bcrypt($pass), 'role' => 0]
+        );
 
-        // Manager - All access except settings and setting reports
-        User::create([
-            'name' => 'Manager',
-            'email' => 'manager@gmail.com',
-            'password' => bcrypt($pass),
-            'role' => 1,
-        ]);
+        // Backoffice - Can manage products and GRNs
+        User::firstOrCreate(
+            ['email' => 'backoffice@gmail.com'],
+            ['name' => 'Backoffice', 'password' => bcrypt($pass), 'role' => 1]
+        );
 
-        // Cashier - Only sales and sales reports
-        User::create([
-            'name' => 'Cashier',
-            'email' => 'cashier@gmail.com',
-            'password' => bcrypt($pass),
-            'role' => 2,
-        ]);
+        // Pharmacy Cashier
+        User::firstOrCreate(
+            ['email' => 'pharmacy@gmail.com'],
+            ['name' => 'Pharmacy Cashier', 'password' => bcrypt($pass), 'role' => 2, 'division_id' => 1]
+        );
 
-        // Store Keeper - Inventory management
-        User::create([
-            'name' => 'Store-Keeper',
-            'email' => 'storekeeper@gmail.com',
-            'password' => bcrypt($pass),
-            'role' => 3,
-        ]);
+        // Sports Cashier
+        User::firstOrCreate(
+            ['email' => 'sports@gmail.com'],
+            ['name' => 'Sports Cashier', 'password' => bcrypt($pass), 'role' => 2, 'division_id' => 2]
+        );
 
 
     }

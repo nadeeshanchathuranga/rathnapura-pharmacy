@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Division;
 
 class Product extends Model
 {
@@ -64,6 +65,7 @@ class Product extends Model
         'transfer_to_sales_rate',
         'status',
         'image',
+        'division_id',
     ];
 
     // Virtual attributes that are always computed and returned with the model
@@ -318,6 +320,11 @@ class Product extends Model
 {
     return $this->belongsTo(MeasurementUnit::class, 'purchase_unit_id');
 }
+
+    public function division()
+    {
+        return $this->belongsTo(Division::class);
+    }
  public function getShopStockBreakdownAttribute()
     {
         // Use the helper method with shop quantity

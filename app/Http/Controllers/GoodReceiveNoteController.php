@@ -146,7 +146,7 @@ class GoodReceiveNoteController extends Controller
             $grnTaxTotal = $this->roundToWhole((float) ($validated['tax_total'] ?? 0));
             $computedSubtotal = 0;
 
-            // Create main GRN record
+            // Create main GRN record with default approval_status 'pending'
             $grn = GoodsReceivedNote::create([
                 'purchase_order_request_id'        => null,
                 'goods_received_note_no'        => $validated['goods_received_note_no'],
@@ -160,7 +160,8 @@ class GoodReceiveNoteController extends Controller
                 'discount_percentage' => $grnDiscountPercentage,
                 'tax_total'     => $grnTaxTotal,
                 'remarks'       => $validated['remarks'] ?? null,
-                'status'        => 1,   
+                'status'        => 1,
+                'approval_status' => 'pending',
                 'error'=> null,
             ]);
 
@@ -372,6 +373,16 @@ class GoodReceiveNoteController extends Controller
         $goodReceiveNote->update(['status' => $validated['status']]);
 
         return redirect()->back()->with('success', 'Status updated successfully');
+    }
+
+    /**
+     * Approve a Goods Received Note (Admin only)
+     */
+    public function approve(GoodsReceivedNote $goodsReceivedNote)
+    {
+        $goodsReceivedNote->update(['approval_status' => 'approved']);
+
+        return redirect()->back()->with('success', 'GRN approved successfully');
     }
 
     /**

@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
        // TaxSeeder::class,
         // ProductSeeder::class,
          CurrencySeeder::class,
+            DivisionSeeder::class,
             UserSeeder::class,
             CompanyInformationSeeder::class,
               BillSettingSeeder::class,

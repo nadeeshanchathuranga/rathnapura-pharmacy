@@ -35,7 +35,7 @@
               <th class="px-4 py-3 text-blue-600 font-semibold text-sm">Products</th>
               <th class="px-4 py-3 text-blue-600 font-semibold text-sm">Discount</th>
               <th class="px-4 py-3 text-blue-600 font-semibold text-sm">Tax</th>
-
+              <th class="px-4 py-3 text-blue-600 font-semibold text-sm">Approval</th>
               <th class="px-4 py-3 text-blue-600 font-semibold text-sm text-center">
                 Actions
               </th>
@@ -82,6 +82,18 @@
                 }}</span>
               </td>
 
+              <!-- Approval Status Badge -->
+              <td class="px-4 py-4">
+                <span
+                  :class="goodsReceivedNote.approval_status === 'approved'
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-yellow-100 text-yellow-700'"
+                  class="px-3 py-1 rounded-full text-xs font-semibold capitalize"
+                >
+                  {{ goodsReceivedNote.approval_status || 'pending' }}
+                </span>
+              </td>
+
               <td class="px-4 py-4">
                 <div class="flex gap-2 justify-center">
                   <button
@@ -89,6 +101,14 @@
                     class="px-4 py-2 text-xs font-medium text-white bg-green-600 rounded-[5px] hover:bg-green-700 transition-all duration-200"
                   >
                     View
+                  </button>
+                  <!-- Admin-only Approve button -->
+                  <button
+                    v-if="isAdmin && goodsReceivedNote.approval_status !== 'approved'"
+                    @click="approveGrn(goodsReceivedNote)"
+                    class="px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-[5px] hover:bg-blue-700 transition-all duration-200"
+                  >
+                    Approve
                   </button>
                 </div>
               </td>
@@ -157,8 +177,8 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { router } from "@inertiajs/vue3";
+import { ref, computed } from "vue";
+import { router, usePage } from "@inertiajs/vue3";
 import { logActivity } from "@/composables/useActivityLog";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import GoodsReceivedNoteCreateModal from "./Components/GoodsReceivedNoteCreateModal.vue";
@@ -181,6 +201,8 @@ const selectedGoodsReceivedNote = ref(null);
 
 const { goToStoresTab } = useDashboardNavigation();
 
+const isAdmin = computed(() => usePage().props.auth?.user?.role === 0);
+
 const openCreateModal = () => {
   isCreateModalOpen.value = true;
 };
@@ -201,6 +223,17 @@ const openViewModal = async (goodsReceivedNote) => {
 const openDeleteModal = (goodsReceivedNote) => {
   selectedGoodsReceivedNote.value = goodsReceivedNote;
   isDeleteModalOpen.value = true;
+};
+
+const approveGrn = (goodsReceivedNote) => {
+  router.patch(route('good-receive-notes.approve', goodsReceivedNote.id), {}, {
+    onSuccess: () => {
+      logActivity("approve", "goods_received_notes", {
+        grn_id: goodsReceivedNote.id,
+        grn_number: goodsReceivedNote.goods_received_note_no,
+      });
+    },
+  });
 };
 
 const formatDate = (date) => {

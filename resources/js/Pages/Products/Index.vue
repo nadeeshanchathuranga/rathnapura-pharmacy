@@ -22,6 +22,27 @@
           + Add Product
         </button>
       </div>
+      <!-- Division Filter (Admin/Backoffice only) -->
+      <div v-if="isAdmin" class="mb-4 flex items-center gap-2">
+        <span class="text-sm font-medium text-gray-600">Filter by Division:</span>
+        <button
+          @click="applyDivisionFilter(null)"
+          :class="[
+            'px-4 py-1.5 rounded-[5px] text-sm font-medium transition-all',
+            !divisionFilter ? 'bg-blue-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+          ]"
+        >All</button>
+        <button
+          v-for="div in divisions"
+          :key="div.id"
+          @click="applyDivisionFilter(div.id)"
+          :class="[
+            'px-4 py-1.5 rounded-[5px] text-sm font-medium transition-all',
+            divisionFilter == div.id ? 'bg-blue-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+          ]"
+        >{{ div.name }}</button>
+      </div>
+
       <!-- Products Table Container -->
       <div class="bg-white rounded-2xl border border-gray-200 p-6">
         <table class="w-full text-left border-collapse">
@@ -242,6 +263,7 @@
       :discounts="discounts"
       :taxes="taxes"
       :currencySymbol="currencySymbol"
+      :divisions="divisions"
     />
 
     <!-- View Product Modal - Read-only display with barcode printing capability -->
@@ -264,6 +286,7 @@
       :discounts="discounts"
       :taxes="taxes"
       :currencySymbol="currencySymbol"
+      :divisions="divisions"
     />
     <!-- Duplicate Product Modal - Clone product with new barcode for variants -->
     <ProductDuplicateModal
@@ -288,8 +311,8 @@
  * Handles product viewing, editing, duplication, and deletion
  */
 
-import { ref } from "vue";
-import { router } from "@inertiajs/vue3";
+import { ref, computed } from "vue";
+import { router, usePage } from "@inertiajs/vue3";
 import { logActivity } from "@/composables/useActivityLog";
 import ProductCreateModal from "./Components/ProductCreateModal.vue";
 import ProductViewModal from "./Components/ProductViewModal.vue";
@@ -333,7 +356,24 @@ defineProps({
     type: Array,
     required: true,
   },
+  divisions: {
+    type: Array,
+    default: () => [],
+  },
+  divisionFilter: {
+    type: String,
+    default: null,
+  },
 });
+
+const page = usePage();
+const isAdmin = computed(() => page.props.auth?.user?.role === 0 || page.props.auth?.user?.role === 1);
+const selectedDivisionFilter = ref(null);
+
+const applyDivisionFilter = (divId) => {
+  selectedDivisionFilter.value = divId;
+  router.get(route('products.index'), divId ? { division_filter: divId } : {}, { preserveScroll: true });
+};
 
 /**
  * Reactive State Variables

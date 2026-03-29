@@ -12,7 +12,14 @@
                     </div>
 
                     <!-- Compact Date Filter -->
-                    <div class="flex items-center gap-2 bg-gray-800 rounded-lg p-3 shadow-lg">
+                    <div class="flex flex-wrap items-center gap-2 bg-gray-800 rounded-lg p-3 shadow-lg">
+                        <select
+                            v-model="selectedDivision"
+                            class="px-3 py-1.5 bg-gray-700 text-white text-sm rounded focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="">All Divisions</option>
+                            <option v-for="div in divisions" :key="div.id" :value="div.id">{{ div.name }}</option>
+                        </select>
                         <input
                             type="date"
                             v-model="startDate"
@@ -147,10 +154,13 @@ const props = defineProps({
     productSalesReport: Array,
     startDate: String,
     endDate: String,
+    divisions: { type: Array, default: () => [] },
+    divisionId: { type: [String, Number], default: '' },
 });
 
 const startDate = ref(props.startDate);
 const endDate = ref(props.endDate);
+const selectedDivision = ref(props.divisionId ?? '');
 
 const totalSalesQty = computed(() => {
     return props.productSalesReport.reduce((sum, product) => sum + product.sales_quantity, 0);
@@ -172,6 +182,7 @@ const filterReports = () => {
     router.get(route('reports.product-sales'), {
         start_date: startDate.value,
         end_date: endDate.value,
+        ...(selectedDivision.value ? { division_id: selectedDivision.value } : {}),
     }, {
         preserveState: true,
         preserveScroll: true,
@@ -179,6 +190,7 @@ const filterReports = () => {
 };
 
 const resetFilter = () => {
+    selectedDivision.value = '';
     router.get(route('reports.product-sales'), {}, {
         preserveState: false,
         preserveScroll: false,

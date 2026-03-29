@@ -35,6 +35,8 @@
                 <th class="px-6 py-4 text-sm font-semibold text-gray-700">Name</th>
                 <th class="px-6 py-4 text-sm font-semibold text-gray-700">Email</th>
                 <th class="px-6 py-4 text-sm font-semibold text-gray-700">User Type</th>
+                <th class="px-6 py-4 text-sm font-semibold text-gray-700">Division</th>
+                <th class="px-6 py-4 text-sm font-semibold text-gray-700">Status</th>
                 <th class="px-6 py-4 text-sm font-semibold text-gray-700">Actions</th>
               </tr>
             </thead>
@@ -54,17 +56,20 @@
                 <td class="px-6 py-4">
                   <span
                     :class="{
-                      'bg-purple-100 text-purple-700 px-3 py-1 rounded-[5px] text-xs font-semibold':
-                        user.role == 0,
-                      'bg-blue-100 text-blue-700 px-3 py-1 rounded-[5px] text-xs font-semibold':
-                        user.role == 1,
-                      'bg-green-100 text-green-700 px-3 py-1 rounded-[5px] text-xs font-semibold':
-                        user.role == 2,
-                      'bg-cyan-100 text-cyan-700 px-3 py-1 rounded-[5px] text-xs font-semibold':
-                        user.role == 3,
+                      'bg-purple-100 text-purple-700 px-3 py-1 rounded-[5px] text-xs font-semibold': user.role == 0,
+                      'bg-blue-100 text-blue-700 px-3 py-1 rounded-[5px] text-xs font-semibold': user.role == 1,
+                      'bg-green-100 text-green-700 px-3 py-1 rounded-[5px] text-xs font-semibold': user.role == 2,
                     }"
                   >
                     {{ getUserType(user.role) }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-600">
+                  {{ user.division ? user.division.name : '—' }}
+                </td>
+                <td class="px-6 py-4">
+                  <span :class="user.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'" class="px-3 py-1 rounded-[5px] text-xs font-semibold">
+                    {{ user.is_active ? 'Active' : 'Inactive' }}
                   </span>
                 </td>
                 <td class="px-6 py-4">
@@ -85,7 +90,7 @@
                 </td>
               </tr>
               <tr v-if="!users.data || users.data.length === 0">
-                <td colspan="5" class="px-6 py-12 text-center">
+                <td colspan="7" class="px-6 py-12 text-center">
                   <div class="text-gray-400">
                     <svg
                       class="mx-auto h-12 w-12 text-gray-300 mb-3"
@@ -182,9 +187,8 @@ const selectedUserForDelete = ref(null);
 const getUserType = (type) => {
   const types = {
     0: "Admin",
-    1: "Manager",
+    1: "Backoffice",
     2: "Cashier",
-    3: "Stock Keeper",
   };
   return types[type] || "Unknown";
 };
