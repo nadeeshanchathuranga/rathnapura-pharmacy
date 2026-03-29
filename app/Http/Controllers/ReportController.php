@@ -38,6 +38,46 @@ use Maatwebsite\Excel\Facades\Excel;
  */
 class ReportController extends Controller
 {
+    private function shouldScopeToCashierDivision(): bool
+    {
+        $user = auth()->user();
+
+        return $user && (int) $user->role === 2 && !empty($user->division_id);
+    }
+
+    private function cashierDivisionId(): ?int
+    {
+        if (!$this->shouldScopeToCashierDivision()) {
+            return null;
+        }
+
+        return (int) auth()->user()->division_id;
+    }
+
+    private function applyCashierDivisionFilterToProducts($query)
+    {
+        $divisionId = $this->cashierDivisionId();
+
+        if ($divisionId) {
+            $query->where('division_id', $divisionId);
+        }
+
+        return $query;
+    }
+
+    private function applyCashierDivisionFilterToIncome($query)
+    {
+        $divisionId = $this->cashierDivisionId();
+
+        if ($divisionId) {
+            $query->whereHas('sale', function ($saleQuery) use ($divisionId) {
+                $saleQuery->where('division_id', $divisionId);
+            });
+        }
+
+        return $query;
+    }
+
     /**
      * Display the main reports dashboard
      *
@@ -377,7 +417,10 @@ class ReportController extends Controller
 
         return $pdf->download('product-stock-report-' . date('Y-m-d') . '.pdf');
         */
-        $productsStock = Product::with(['purchaseUnit:id,symbol,name', 'transferUnit:id,symbol,name', 'salesUnit:id,symbol,name'])
+        $productQuery = Product::with(['purchaseUnit:id,symbol,name', 'transferUnit:id,symbol,name', 'salesUnit:id,symbol,name']);
+        $this->applyCashierDivisionFilterToProducts($productQuery);
+
+        $productsStock = $productQuery
             ->orderBy('name')
             ->get()
             ->map(function($p) {
@@ -419,7 +462,10 @@ class ReportController extends Controller
      */
     public function exportProductStockExcel()
     {
-        $productsStock = Product::with(['purchaseUnit:id,symbol,name', 'transferUnit:id,symbol,name', 'salesUnit:id,symbol,name'])
+        $productQuery = Product::with(['purchaseUnit:id,symbol,name', 'transferUnit:id,symbol,name', 'salesUnit:id,symbol,name']);
+        $this->applyCashierDivisionFilterToProducts($productQuery);
+
+        $productsStock = $productQuery
             ->orderBy('name')
             ->get()
             ->map(function($p) {
@@ -657,9 +703,12 @@ class ReportController extends Controller
         $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
         $currency = $request->input('currency', CompanyInformation::first()?->currency ?? 'Rs.');
 
+        $incomeQuery = Income::with('sale')
+            ->whereBetween('income_date', [$startDate, $endDate]);
+        $this->applyCashierDivisionFilterToIncome($incomeQuery);
+
         // Fetch all income records with sale information
-        $salesIncomeList = Income::with('sale')
-            ->whereBetween('income_date', [$startDate, $endDate])
+        $salesIncomeList = (clone $incomeQuery)
             ->orderBy('income_date', 'desc')
             ->orderBy('id', 'desc')
             ->get()
@@ -680,11 +729,11 @@ class ReportController extends Controller
             });
 
         // Calculate totals
-        $totalIncome = Income::whereBetween('income_date', [$startDate, $endDate])
+        $totalIncome = (clone $incomeQuery)
             ->whereNotIn('transaction_type', ['product_return', 'cash_return'])
             ->sum('amount');
 
-        $totalReturns = Income::whereBetween('income_date', [$startDate, $endDate])
+        $totalReturns = (clone $incomeQuery)
             ->whereIn('transaction_type', ['product_return', 'cash_return'])
             ->sum('amount');
 
@@ -713,9 +762,12 @@ class ReportController extends Controller
         $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
         $currency = $request->input('currency', CompanyInformation::first()?->currency ?? 'Rs.');
 
+        $incomeQuery = Income::with('sale')
+            ->whereBetween('income_date', [$startDate, $endDate]);
+        $this->applyCashierDivisionFilterToIncome($incomeQuery);
+
         // Fetch all income records with sale information
-        $salesIncomeList = Income::with('sale')
-            ->whereBetween('income_date', [$startDate, $endDate])
+        $salesIncomeList = (clone $incomeQuery)
             ->orderBy('income_date', 'desc')
             ->orderBy('id', 'desc')
             ->get()
@@ -1433,7 +1485,7 @@ class ReportController extends Controller
      */
     public function stockReport()
     {
-        $productsStock = Product::with(['salesUnit', 'purchaseUnit'])
+        $productQuery = Product::with(['salesUnit', 'purchaseUnit'])
             ->select(
                 'id',
                 'name',
@@ -1444,7 +1496,11 @@ class ReportController extends Controller
                 'sales_unit_id',
                 'purchase_unit_id',
                 'transfer_unit_id'
-            )
+            );
+
+        $this->applyCashierDivisionFilterToProducts($productQuery);
+
+        $productsStock = $productQuery
             ->orderBy('name')
             ->paginate(10)
             ->withQueryString();
@@ -1667,9 +1723,12 @@ class ReportController extends Controller
         $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
 
+        $incomeQuery = Income::with('sale')
+            ->whereBetween('income_date', [$startDate, $endDate]);
+        $this->applyCashierDivisionFilterToIncome($incomeQuery);
+
         // Fetch paginated income records with sale information
-        $salesIncomeList = Income::with('sale')
-            ->whereBetween('income_date', [$startDate, $endDate])
+        $salesIncomeList = (clone $incomeQuery)
             ->orderBy('income_date', 'desc')
             ->orderBy('id', 'desc')
             ->paginate(10)
@@ -1694,11 +1753,11 @@ class ReportController extends Controller
         });
 
         // Calculate totals from all records (not just paginated)
-        $totalIncome = Income::whereBetween('income_date', [$startDate, $endDate])
+        $totalIncome = (clone $incomeQuery)
             ->whereNotIn('transaction_type', ['product_return', 'cash_return'])
             ->sum('amount');
 
-        $totalReturns = Income::whereBetween('income_date', [$startDate, $endDate])
+        $totalReturns = (clone $incomeQuery)
             ->whereIn('transaction_type', ['product_return', 'cash_return'])
             ->sum('amount');
 
@@ -1743,8 +1802,11 @@ class ReportController extends Controller
             2 => 'Credit',
         ];
 
-        $paymentTypeSums = Income::select('payment_type', DB::raw('SUM(amount) as total_amount'))
-            ->whereBetween('income_date', [$startDate, $endDate])
+        $incomeQuery = Income::select('payment_type', DB::raw('SUM(amount) as total_amount'))
+            ->whereBetween('income_date', [$startDate, $endDate]);
+        $this->applyCashierDivisionFilterToIncome($incomeQuery);
+
+        $paymentTypeSums = $incomeQuery
             ->whereNotIn('transaction_type', ['product_return', 'cash_return'])
             ->groupBy('payment_type')
             ->pluck('total_amount', 'payment_type');
