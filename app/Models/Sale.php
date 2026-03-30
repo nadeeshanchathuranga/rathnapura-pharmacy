@@ -7,12 +7,25 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property int $id
  * @property string $invoice_no
+ * @property int|null $type
  * @property int|null $customer_id
+ * @property int|null $user_id
+ * @property int|null $division_id
+ * @property int|null $shift_id
  * @property float $total_amount
  * @property float $discount
  * @property float $net_amount
  * @property float $paid_amount
+ * @property float|null $return_amount
  * @property float $balance
+ * @property bool $has_return
+ * @property int $paid_status
+ * @property int|null $payment1_type
+ * @property float|null $payment1_amount
+ * @property string|null $payment1_card_type
+ * @property int|null $payment2_type
+ * @property float|null $payment2_amount
+ * @property string|null $payment2_card_type
  * @property string|null $sale_date
  */
 class Sale extends Model
@@ -25,6 +38,7 @@ class Sale extends Model
         'customer_id',
         'user_id',
         'division_id',
+        'shift_id',
         'total_amount',
         'discount',
         'net_amount',
@@ -33,6 +47,9 @@ class Sale extends Model
         'balance',
         'has_return',
         'paid_status',
+        'payment1_type',
+        'payment1_amount',
+        'payment1_card_type',
         'payment2_type',
         'payment2_amount',
         'payment2_card_type',
@@ -47,6 +64,8 @@ class Sale extends Model
         'paid_amount' => 'decimal:2',
         'return_amount' => 'decimal:2',
         'balance' => 'decimal:2',
+        'payment1_amount' => 'decimal:2',
+        'payment2_amount' => 'decimal:2',
         'has_return' => 'boolean',
     ];
 
@@ -64,6 +83,11 @@ class Sale extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function shift()
+    {
+        return $this->belongsTo(Shift::class, 'shift_id');
     }
 
     // Relationship: Sale has one Income

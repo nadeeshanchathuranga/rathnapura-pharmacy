@@ -33,6 +33,8 @@ use App\Http\Controllers\StockTransferReturnReportController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\ImportExportController;
 use App\Http\Controllers\ExcelController;
+use App\Http\Controllers\ShiftController;
+use App\Http\Controllers\TillManagementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -235,6 +237,18 @@ Route::middleware(['auth', 'role:0,1,2'])->group(function () {
     Route::get('/sales/unpaid-list', [SaleController::class, 'unpaidList'])->name('sales.unpaid-list');
     Route::patch('/sales/{sale}/mark-paid', [SaleController::class, 'markAsPaid'])->name('sales.mark-paid');
     Route::resource('sales', SaleController::class, ['only' => ['index', 'store', 'update', 'destroy']]);
+
+    // Shift Management
+    Route::get('/shift-management', [ShiftController::class, 'index'])->name('shift-management.index');
+    Route::get('/shift-management/end-page', [ShiftController::class, 'endPage'])->name('shift-management.end-page');
+    Route::get('/shift-management/{shift}', [ShiftController::class, 'show'])->name('shift-management.show');
+    Route::delete('/shift-management/{shift}', [ShiftController::class, 'destroy'])->name('shift-management.destroy');
+    Route::post('/shift-management/start', [ShiftController::class, 'start'])->name('shift-management.start');
+    Route::post('/shift-management/end', [ShiftController::class, 'end'])->name('shift-management.end');
+
+    // Till Management
+    Route::get('/till-management', [TillManagementController::class, 'index'])->name('till-management.index');
+    Route::post('/till-management', [TillManagementController::class, 'store'])->name('till-management.store');
 });
 
 /*
