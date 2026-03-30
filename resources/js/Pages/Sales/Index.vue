@@ -23,11 +23,12 @@
           <div class="flex items-center gap-3">
             <button
               @click="openUnpaidModal"
+              data-shortcut="F11"
               :disabled="isShiftLocked"
               class="px-6 py-2.5 rounded-[5px] font-medium text-sm bg-orange-500 hover:bg-orange-600 text-white transition-all duration-200 shadow-sm"
               :class="isShiftLocked ? 'opacity-60 cursor-not-allowed' : ''"
             >
-              ⏳ Unpaid Sales
+              ⏳ Unpaid Sales (F11)
             </button>
             <button
               @click="goToCreateSalesReturn"
@@ -553,26 +554,28 @@
               <div class="mt-3 grid grid-cols-2 gap-3">
                 <button
                   @click="submitSale(1)"
+                  data-shortcut="F3"
                   :disabled="form.items.length === 0 || form.payments.length === 0 || form.processing"
                   class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 px-4 rounded-lg transition text-lg shadow-lg"
                 >
                   <span v-if="form.processing">⏳ Processing...</span>
-                  <span v-else>✅ Paid</span>
+                  <span v-else>✅ Paid (F3)</span>
                 </button>
                 <button
                   @click="submitSale(0)"
+                  data-shortcut="F5"
                   :disabled="form.items.length === 0 || form.processing"
                   class="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 px-4 rounded-lg transition text-lg shadow-lg"
                 >
                   <span v-if="form.processing">⏳ Processing...</span>
-                  <span v-else>📋 Unpaid</span>
+                  <span v-else>📋 Unpaid (F5)</span>
                 </button>
               </div>
 
               <!-- Quick Actions -->
               <div class="mt-4 text-xs text-gray-400 text-center">
                 <p>Keyboard Shortcuts:</p>
-                <p>F2: Focus Barcode | F4: Cash Payment | F9: Card Payment | F8: Clear Cart | F12: Create Sales Return | ESC: Home</p>
+                <p>F2: Focus Barcode | F3: Paid Sale | F4: Cash Payment | F5: Unpaid Sale | F8: Clear Cart | F9: Card Payment | F11: Unpaid Sales List | F12: Create Sales Return | ESC: Home</p>
                 <button
                   type="button"
                   class="hidden"

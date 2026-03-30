@@ -463,6 +463,12 @@ const handleGlobalPosNavigation = (event) => {
         return;
     }
 
+    const pageShortcutElement = findShortcutElement('F5');
+
+    if (pageShortcutElement) {
+        return;
+    }
+
     consumeEvent(event);
     resetKeyboardTransientState();
     navigateToPosIfNeeded();
