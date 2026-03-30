@@ -17,10 +17,12 @@ return new class extends Migration
             $table->renameColumn('store_quantity', 'store_quantity_in_purchase_unit');
             $table->renameColumn('shop_quantity', 'shop_quantity_in_sales_unit');
         });
-        
-        // Update column comments
-        DB::statement("ALTER TABLE products MODIFY COLUMN store_quantity_in_purchase_unit INT DEFAULT 0 COMMENT 'Store stock quantity in purchase units (e.g., boxes)'");
-        DB::statement("ALTER TABLE products MODIFY COLUMN shop_quantity_in_sales_unit INT DEFAULT 0 COMMENT 'Shop stock quantity in sales units (e.g., bottles)'");
+
+        if (DB::getDriverName() === 'mysql') {
+            // Update column comments (MySQL only)
+            DB::statement("ALTER TABLE products MODIFY COLUMN store_quantity_in_purchase_unit INT DEFAULT 0 COMMENT 'Store stock quantity in purchase units (e.g., boxes)'");
+            DB::statement("ALTER TABLE products MODIFY COLUMN shop_quantity_in_sales_unit INT DEFAULT 0 COMMENT 'Shop stock quantity in sales units (e.g., bottles)'");
+        }
     }
 
     /**
@@ -33,9 +35,11 @@ return new class extends Migration
             $table->renameColumn('store_quantity_in_purchase_unit', 'store_quantity');
             $table->renameColumn('shop_quantity_in_sales_unit', 'shop_quantity');
         });
-        
-        // Revert column comments
-        DB::statement("ALTER TABLE products MODIFY COLUMN store_quantity INT DEFAULT 0 COMMENT 'Store stock quantity'");
-        DB::statement("ALTER TABLE products MODIFY COLUMN shop_quantity INT DEFAULT 0 COMMENT 'Shop stock quantity'");
+
+        if (DB::getDriverName() === 'mysql') {
+            // Revert column comments (MySQL only)
+            DB::statement("ALTER TABLE products MODIFY COLUMN store_quantity INT DEFAULT 0 COMMENT 'Store stock quantity'");
+            DB::statement("ALTER TABLE products MODIFY COLUMN shop_quantity INT DEFAULT 0 COMMENT 'Shop stock quantity'");
+        }
     }
 };

@@ -14,6 +14,8 @@ use App\Models\Type;
 use App\Models\BillSetting;
 use App\Models\Discount;
 use App\Models\Quotation;
+use App\Models\Shift;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
@@ -25,6 +27,13 @@ class SaleController extends Controller
 
      public function index()
     {
+        $user = Auth::user();
+        if (!$user instanceof User) {
+            abort(401);
+        }
+        $userRole = (int) ($user->getAttribute('role') ?? -1);
+        $userDivisionId = $user->getAttribute('division_id');
+
         // Generate next invoice number
         $lastSale = Sale::latest('id')->first();
         $billSetting = BillSetting::latest('id')->first();
@@ -33,8 +42,8 @@ class SaleController extends Controller
 
         $products = Product::select('id', 'name', 'barcode', 'retail_price', 'wholesale_price', 'shop_quantity_in_sales_unit', 'shop_low_stock_margin', 'image', 'brand_id', 'category_id', 'type_id', 'discount_id', 'sales_unit_id', 'division_id')
             ->with(['brand:id,name', 'category:id,name', 'type:id,name', 'discount:id,name,value,type','salesUnit:id,name'])
-            ->when(auth()->user()->role === 2 && auth()->user()->division_id, function ($q) {
-                $q->where('division_id', auth()->user()->division_id);
+            ->when($userRole === 2 && $userDivisionId, function ($q) use ($userDivisionId) {
+                $q->where('division_id', $userDivisionId);
             })
             ->orderByRaw('CASE WHEN shop_quantity_in_sales_unit <= shop_low_stock_margin THEN 1 ELSE 0 END')
             ->orderBy('name')
@@ -89,6 +98,12 @@ class SaleController extends Controller
                     }),
                 ];
             });
+
+        $activeShift = Shift::open()
+            ->where('user_id', Auth::id())
+            ->latest('id')
+            ->first();
+
         return Inertia::render('Sales/Index', [
             'invoice_no' => $nextInvoiceNo,
             'customers' => $customers,
@@ -100,11 +115,22 @@ class SaleController extends Controller
             'discounts' => $discounts,
             'currencySymbol' => $currencySymbol,
             'quotations' => $quotations,
+            'activeShift' => $activeShift ? [
+                'id' => $activeShift->id,
+                'start_time' => optional($activeShift->start_time)?->format('Y-m-d H:i:s'),
+            ] : null,
         ]);
     }
 
     public function store(Request $request)
     {
+
+        $user = Auth::user();
+        if (!$user instanceof User) {
+            abort(401);
+        }
+        $userId = (int) $user->getAuthIdentifier();
+        $userDivisionId = $user->getAttribute('division_id');
 
 
 
@@ -139,6 +165,15 @@ class SaleController extends Controller
             }
         }
 
+        $activeShift = Shift::open()
+            ->where('user_id', Auth::id())
+            ->latest('id')
+            ->first();
+
+        if (!$activeShift) {
+            return back()->with('error', 'No active shift found. Start a shift before recording sales.');
+        }
+
 
 
 
@@ -161,21 +196,27 @@ class SaleController extends Controller
             $type = $request->customer_type === 'wholesale' ? 2 : 1;
 
             // Determine second payment if two payment methods provided
-            $secondPayment = $payments->get(1);
+            $primaryPayment = $request->payments[0] ?? null;
+            $secondPayment = isset($request->payments[1]) ? $request->payments[1] : null;
 
             // Create sale
             $sale = Sale::create([
                 'invoice_no' => $request->invoice_no,
                 'type' => $type,
                 'customer_id' => $request->customer_id ?: null,
-                'user_id' => Auth::id(),
-                'division_id' => Auth::user()->division_id,
+                'user_id' => $userId,
+                'division_id' => $userDivisionId,
+                'shift_id' => $activeShift->id,
                 'total_amount' => $totalAmount,
                 'discount' => $discount,
                 'net_amount' => $netAmount,
                 'paid_amount' => $totalPaid,
                 'balance' => $balance,
                 'paid_status' => (int) $request->paid_status,
+                'payment1_type' => $primaryPayment ? (int) $primaryPayment['payment_type'] : null,
+                'payment1_amount' => $primaryPayment ? (float) $primaryPayment['amount'] : null,
+                'payment1_card_type' => ($primaryPayment && (int) ($primaryPayment['payment_type'] ?? -1) === 1)
+                    ? ($primaryPayment['card_type'] ?? null) : null,
                 'payment2_type' => $secondPayment ? (int) $secondPayment['payment_type'] : null,
                 'payment2_amount' => $secondPayment ? (float) $secondPayment['amount'] : null,
                 'payment2_card_type' => ($secondPayment && (int) ($secondPayment['payment_type'] ?? -1) === 1)
@@ -489,9 +530,15 @@ class SaleController extends Controller
     public function markAsPaid(Request $request, Sale $sale)
     {
         $user = Auth::user();
+        if (!$user instanceof User) {
+            abort(401);
+        }
+        $userRole = (int) ($user->getAttribute('role') ?? -1);
+        $userDivisionId = $user->getAttribute('division_id');
+        $saleDivisionId = $sale->getAttribute('division_id');
 
         // Cashiers can only update their own division's sales
-        if ($user->role === 2 && $sale->division_id && $sale->division_id !== $user->division_id) {
+        if ($userRole === 2 && $saleDivisionId && $saleDivisionId !== $userDivisionId) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -507,12 +554,17 @@ class SaleController extends Controller
     public function unpaidList(Request $request)
     {
         $user = Auth::user();
+        if (!$user instanceof User) {
+            abort(401);
+        }
+        $userRole = (int) ($user->getAttribute('role') ?? -1);
+        $userDivisionId = $user->getAttribute('division_id');
 
         $sales = Sale::with('customer:id,name')
             ->select('id', 'invoice_no', 'customer_id', 'division_id', 'net_amount', 'sale_date', 'paid_status', 'payment2_type', 'payment2_amount')
             ->where('paid_status', 0)
-            ->when($user->role === 2 && $user->division_id, function ($q) use ($user) {
-                $q->where('division_id', $user->division_id);
+            ->when($userRole === 2 && $userDivisionId, function ($q) use ($userDivisionId) {
+                $q->where('division_id', $userDivisionId);
             })
             ->orderBy('sale_date', 'desc')
             ->orderBy('id', 'desc')
@@ -537,14 +589,19 @@ class SaleController extends Controller
     public function unpaidReport(Request $request)
     {
         $user = Auth::user();
+        if (!$user instanceof User) {
+            abort(401);
+        }
+        $userRole = (int) ($user->getAttribute('role') ?? -1);
+        $userDivisionId = $user->getAttribute('division_id');
         $startDate = $request->input('start_date');
         $endDate   = $request->input('end_date');
 
         $query = Sale::with('customer:id,name', 'user:id,name')
             ->select('id', 'invoice_no', 'customer_id', 'user_id', 'division_id', 'total_amount', 'discount', 'net_amount', 'sale_date', 'paid_status')
             ->where('paid_status', 0)
-            ->when($user->role === 2 && $user->division_id, function ($q) use ($user) {
-                $q->where('division_id', $user->division_id);
+            ->when($userRole === 2 && $userDivisionId, function ($q) use ($userDivisionId) {
+                $q->where('division_id', $userDivisionId);
             })
             ->when($startDate, fn($q) => $q->where('sale_date', '>=', $startDate))
             ->when($endDate,   fn($q) => $q->where('sale_date', '<=', $endDate))

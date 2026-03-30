@@ -23,14 +23,18 @@
           <div class="flex items-center gap-3">
             <button
               @click="openUnpaidModal"
+              :disabled="isShiftLocked"
               class="px-6 py-2.5 rounded-[5px] font-medium text-sm bg-orange-500 hover:bg-orange-600 text-white transition-all duration-200 shadow-sm"
+              :class="isShiftLocked ? 'opacity-60 cursor-not-allowed' : ''"
             >
               ⏳ Unpaid Sales
             </button>
             <button
               @click="goToCreateSalesReturn"
               data-shortcut="F12"
+              :disabled="isShiftLocked"
               class="px-6 py-2.5 rounded-[5px] font-medium text-sm bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 shadow-sm"
+              :class="isShiftLocked ? 'opacity-60 cursor-not-allowed' : ''"
             >
               Create Sales Return (F12)
             </button>
@@ -40,6 +44,30 @@
             </div>
           </div>
         </div>
+
+        <div
+          v-if="isShiftLocked"
+          class="mb-6 rounded-2xl border border-red-200 bg-red-50 p-5"
+        >
+          <div class="flex items-center gap-4">
+            <p class="text-red-700 text-sm font-medium">
+              No active shift found for your user. Start a shift before processing sales.
+            </p>
+            <button
+              @click="openStartShiftModal"
+              :disabled="startShiftForm.processing"
+              class="px-6 py-2 rounded-[8px] font-semibold text-sm bg-red-600 hover:bg-red-700 text-white transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {{ startShiftForm.processing ? 'Starting...' : 'Start Shift' }}
+            </button>
+          </div>
+
+          <p v-if="startShiftForm.errors.opening_till_amount" class="mt-2 text-xs text-red-700">
+            {{ startShiftForm.errors.opening_till_amount }}
+          </p>
+        </div>
+
+        <div :class="isShiftLocked ? 'pointer-events-none opacity-60 select-none' : ''">
 
         <!-- Quotation Selector - Convert Quotation to Sale -->
         <div
@@ -555,8 +583,65 @@
             </div>
           </div>
         </div>
+        </div>
       </div>
     </div>
+
+    <Modal :show="showStartShiftModal" @close="closeStartShiftModal" max-width="lg">
+      <div class="bg-white p-6">
+        <div class="mb-4">
+          <h2 class="text-xl font-bold text-gray-800">Start Shift</h2>
+          <p class="text-sm text-gray-500 mt-1">Enter opening details to unlock billing.</p>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Opening Balance</label>
+            <input
+              v-model="startShiftForm.opening_till_amount"
+              type="number"
+              min="0"
+              step="0.01"
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-[5px] text-sm focus:ring-2 focus:ring-blue-500"
+              placeholder="0.00"
+            />
+            <p v-if="startShiftForm.errors.opening_till_amount" class="mt-2 text-xs text-red-700">
+              {{ startShiftForm.errors.opening_till_amount }}
+            </p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Opening Note (Optional)</label>
+            <textarea
+              v-model="startShiftForm.start_note"
+              rows="3"
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-[5px] text-sm focus:ring-2 focus:ring-blue-500"
+              placeholder="Add a note"
+            ></textarea>
+            <p v-if="startShiftForm.errors.start_note" class="mt-2 text-xs text-red-700">
+              {{ startShiftForm.errors.start_note }}
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-6 flex items-center gap-3">
+          <button
+            @click="startShiftFromBilling"
+            :disabled="startShiftForm.processing"
+            class="px-6 py-2.5 rounded-[5px] bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {{ startShiftForm.processing ? 'Starting...' : 'Start Shift' }}
+          </button>
+          <button
+            @click="closeStartShiftModal"
+            :disabled="startShiftForm.processing"
+            class="px-6 py-2.5 rounded-[5px] bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold transition disabled:opacity-60"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </Modal>
 
     <!-- Unpaid Sales Modal -->
     <Modal :show="showUnpaidModal" @close="showUnpaidModal = false" max-width="3xl">
@@ -1131,6 +1216,10 @@ const props = defineProps({
   discounts: Array,
   billSetting: Object,
   quotations: Array,
+  activeShift: {
+    type: Object,
+    default: null,
+  },
 });
 
 // Only show active customers (status == '1' or 1)
@@ -1156,6 +1245,12 @@ const form = useForm({
   paid_status: 1, // 1 = Paid, 0 = Pending
 });
 
+const startShiftForm = useForm({
+  opening_till_amount: 0,
+  start_note: "",
+  redirect_to: "sales.index",
+});
+
 const selectedProduct = ref(null);
 const selectedQuantity = ref(1);
 const barcodeInput = ref("");
@@ -1163,6 +1258,7 @@ const barcodeField = ref(null);
 const showSuccessModal = ref(false);
 const showPaymentModal = ref(false);
 const showUnpaidModal = ref(false);
+const showStartShiftModal = ref(false);
 const unpaidSales = ref([]);
 const unpaidLoading = ref(false);
 const loadingUnpaidSaleId = ref(null);
@@ -1313,6 +1409,8 @@ const change = computed(() => {
   return cashPaid > netAmount.value ? cashPaid - netAmount.value : 0;
 });
 
+const isShiftLocked = computed(() => !props.activeShift);
+
 // Product modal pagination computed properties
 const paginatedProducts = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value;
@@ -1359,6 +1457,11 @@ const getCurrentPrice = (product) => {
 
 // Add product by barcode
 const addByBarcode = () => {
+  if (isShiftLocked.value) {
+    alert("Start a shift first to unlock billing.");
+    return;
+  }
+
   if (!barcodeInput.value.trim()) return;
 
   const product = props.products.find((p) => p.barcode === barcodeInput.value.trim());
@@ -1409,6 +1512,11 @@ const addByBarcode = () => {
 
 // Add product to cart
 const addToCart = (product) => {
+  if (isShiftLocked.value) {
+    alert("Start a shift first to unlock billing.");
+    return;
+  }
+
   // Check if product is already in cart
   const existingIndex = form.items.findIndex((item) => item.product_id === product.id);
 
@@ -1563,6 +1671,11 @@ const removePayment = (index) => {
 
 // Open payment modal with selected method
 const openPaymentModalForMethod = (method = 0) => {
+  if (isShiftLocked.value) {
+    alert("Start a shift first to unlock billing.");
+    return;
+  }
+
   if (form.items.length === 0) {
     alert("Please add items to cart");
     return;
@@ -1575,6 +1688,11 @@ const openPaymentModalForMethod = (method = 0) => {
 
 // Product modal methods
 const openProductModal = () => {
+  if (isShiftLocked.value) {
+    alert("Start a shift first to unlock billing.");
+    return;
+  }
+
   showProductModal.value = true;
   filterProducts();
   // Initialize all product quantities to 1
@@ -1741,6 +1859,11 @@ const updateCartPrices = () => {
 
 // Submit sale with multiple payments
 const submitSale = (paidStatus = 1) => {
+  if (isShiftLocked.value) {
+    alert("Start a shift first to unlock billing.");
+    return;
+  }
+
   if (form.items.length === 0) {
     alert("Please add items to cart");
     return;
@@ -1836,6 +1959,28 @@ const submitSale = (paidStatus = 1) => {
       alert(errorMsg);
     },
   });
+};
+
+const startShiftFromBilling = () => {
+  startShiftForm.post(route("shift-management.start"), {
+    preserveScroll: true,
+    onSuccess: () => {
+      showStartShiftModal.value = false;
+      startShiftForm.reset();
+      startShiftForm.opening_till_amount = 0;
+      startShiftForm.start_note = "";
+      startShiftForm.redirect_to = "sales.index";
+      router.visit(route("sales.index"));
+    },
+  });
+};
+
+const openStartShiftModal = () => {
+  showStartShiftModal.value = true;
+};
+
+const closeStartShiftModal = () => {
+  showStartShiftModal.value = false;
 };
 
 // Unpaid sales modal
