@@ -42,6 +42,19 @@
                 <!-- Quick Links to Reports -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <Link
+                        :href="route('reports.unpaid-sales')"
+                        class="bg-gradient-to-br from-amber-900 to-amber-800 hover:from-amber-800 hover:to-amber-900 rounded-lg p-6 shadow-lg transition transform hover:scale-105 border border-amber-900"
+                    >
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-amber-200 text-sm font-medium">Sales</p>
+                                <p class="text-white text-lg font-bold mt-1">Unpaid Report</p>
+                            </div>
+                            <div class="text-amber-200 text-4xl">⏳</div>
+                        </div>
+                    </Link>
+
+                    <Link
                         :href="route('reports.product-release')"
                         class="bg-gradient-to-br from-purple-900 to-purple-800 hover:from-purple-800 hover:to-purple-900 rounded-lg p-6 shadow-lg transition transform hover:scale-105 border border-purple-900"
                     >
