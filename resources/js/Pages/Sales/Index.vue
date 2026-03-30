@@ -585,13 +585,22 @@
                 <td class="px-3 py-3 text-gray-600">{{ sale.sale_date }}</td>
                 <td class="px-3 py-3 text-right font-semibold text-orange-600">{{ page.props.currency || 'Rs.' }} {{ sale.net_amount }}</td>
                 <td class="px-3 py-3 text-center">
-                  <button
-                    @click="markAsPaid(sale)"
-                    :disabled="sale.marking"
-                    class="px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white text-xs font-semibold rounded-[5px] transition"
-                  >
-                    {{ sale.marking ? 'Saving...' : '✅ Mark as Paid' }}
-                  </button>
+                  <div class="flex items-center justify-center gap-2">
+                    <button
+                      @click="loadUnpaidSale(sale)"
+                      :disabled="loadingUnpaidSaleId === sale.id"
+                      class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white text-xs font-semibold rounded-[5px] transition"
+                    >
+                      {{ loadingUnpaidSaleId === sale.id ? 'Loading...' : '📥 Load' }}
+                    </button>
+                    <button
+                      @click="markAsPaid(sale)"
+                      :disabled="sale.marking"
+                      class="px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white text-xs font-semibold rounded-[5px] transition"
+                    >
+                      {{ sale.marking ? 'Saving...' : '✅ Mark as Paid' }}
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -1156,6 +1165,7 @@ const showPaymentModal = ref(false);
 const showUnpaidModal = ref(false);
 const unpaidSales = ref([]);
 const unpaidLoading = ref(false);
+const loadingUnpaidSaleId = ref(null);
 const showProductModal = ref(false);
 const showQuickAddCustomer = ref(false);
 const paymentMethod = ref(0);
@@ -1166,6 +1176,7 @@ const completedSaleDate = ref("");
 const completedCustomer = ref("");
 const completedPaymentType = ref(0);
 const completedCardType = ref(null);
+const completedPayments = ref([]);
 const completedItems = ref([]);
 const completedTotal = ref("0.00");
 const completedProductDiscount = ref("0.00");
@@ -1173,6 +1184,8 @@ const completedDiscount = ref("0.00");
 const completedNetAmount = ref("0.00");
 const completedPaid = ref("0.00");
 const completedBalance = ref("0.00");
+const completedPaidStatus = ref(1);
+const editingUnpaidSaleId = ref(null);
 
 // Quotation selector
 const selectedQuotationId = ref("");
@@ -1493,6 +1506,8 @@ const clearCart = () => {
     form.discount = 0;
     form.payments = [];
     form.quotation_id = null; // Reset quotation reference
+    editingUnpaidSaleId.value = null;
+    form.invoice_no = props.invoice_no;
     barcodeField.value?.focus();
   }
 };
@@ -1737,12 +1752,8 @@ const submitSale = (paidStatus = 1) => {
     return;
   }
 
-  // For unpaid, add a zero-amount cash payment placeholder if none provided
-  if (paidStatus === 0 && form.payments.length === 0) {
-    form.payments = [{ payment_type: 0, amount: 0, card_type: null }];
-  }
-
   form.paid_status = paidStatus;
+  completedPaidStatus.value = paidStatus;
 
   if (balance.value > 0) {
     if (!confirm(`Unpaid balance: Rs. ${(balance.value||0).toFixed(2)}. Continue?`)) {
@@ -1759,6 +1770,11 @@ const submitSale = (paidStatus = 1) => {
     form.payments.length > 0 ? form.payments[0].payment_type : 0;
   completedCardType.value =
     form.payments.length > 0 ? (form.payments[0].card_type || null) : null;
+  completedPayments.value = form.payments.map((payment) => ({
+    payment_type: payment.payment_type,
+    amount: parseFloat(payment.amount) || 0,
+    card_type: payment.card_type || null,
+  }));
   completedItems.value = [...form.items];
   completedTotal.value = (originalTotal.value||0).toFixed(2);
   completedProductDiscount.value = (totalProductDiscount.value||0).toFixed(2);
@@ -1767,11 +1783,19 @@ const submitSale = (paidStatus = 1) => {
   completedPaid.value = (totalPaid.value||0).toFixed(2);
   completedBalance.value = (balance.value||0).toFixed(2);
 
-  form.post(route("sales.store"), {
+  const submitRoute = editingUnpaidSaleId.value
+    ? route("sales.complete-unpaid", editingUnpaidSaleId.value)
+    : route("sales.store");
+
+  const submitMethod = editingUnpaidSaleId.value
+    ? form.patch.bind(form)
+    : form.post.bind(form);
+
+  submitMethod(submitRoute, {
     preserveScroll: true,
     onSuccess: async () => {
       await logActivity("create", "sales", {
-        action: "complete_sale",
+        action: editingUnpaidSaleId.value ? "complete_unpaid_sale" : "complete_sale",
         invoice_no: form.invoice_no,
         customer_id: form.customer_id,
         items_count: form.items.length,
@@ -1839,6 +1863,49 @@ const markAsPaid = async (sale) => {
   }
 };
 
+const loadUnpaidSale = async (sale) => {
+  if (!sale?.id) return;
+
+  if (form.items.length > 0) {
+    if (!confirm("This will replace current cart items. Continue?")) {
+      return;
+    }
+  }
+
+  loadingUnpaidSaleId.value = sale.id;
+  try {
+    const response = await axios.get(route('sales.unpaid-details', sale.id));
+    const data = response.data || {};
+
+    form.invoice_no = data.invoice_no || form.invoice_no;
+    form.customer_id = data.customer_id || "";
+    form.customer_type = data.customer_type || "retail";
+    form.sale_date = data.sale_date || form.sale_date;
+    form.discount = parseFloat(data.discount || 0);
+    form.items = (data.items || []).map((item) => ({
+      product_id: item.product_id,
+      product_name: item.product_name,
+      price: parseFloat(item.price || 0),
+      quantity: parseFloat(item.quantity || 1),
+      sale_unit: item.sale_unit || "Not found",
+      discount: null,
+      discountApplied: false,
+    }));
+    form.payments = [];
+    form.paid_status = 0;
+    editingUnpaidSaleId.value = data.id || sale.id;
+
+    showUnpaidModal.value = false;
+    alert(`Loaded unpaid invoice: ${data.invoice_no || sale.invoice_no}`);
+    barcodeField.value?.focus();
+  } catch (e) {
+    console.error('Failed to load unpaid sale', e);
+    alert('Failed to load unpaid sale.');
+  } finally {
+    loadingUnpaidSaleId.value = null;
+  }
+};
+
 // Print receipt
 const printReceipt = () => {
   const printWindow = window.open("", "_blank", "width=302,height=600");
@@ -1864,9 +1931,28 @@ const printReceipt = () => {
         ? 'Medicines cannot be returned or exchanged after purchase. Please check your items carefully before leaving.'
         : (bill.footer_description || 'Thank you for your business.'));
   const currency = page.props.currency || "Rs.";
+  const paymentStatusLabel = completedPaidStatus.value === 0 ? "Unpaid" : "Paid";
+  const paymentDetailsList = completedPayments.value || [];
+  const paymentDetailsHtml = paymentDetailsList.length
+    ? paymentDetailsList
+        .map(
+          (payment) => `
+                    <div class="total-row">
+                        <span>${getPaymentTypeText(payment.payment_type, payment.card_type)}:</span>
+                    <span>${currency} ${(parseFloat(payment.amount) || 0).toFixed(2)}</span>
+                    </div>
+                    `
+        )
+        .join("")
+            : completedPaidStatus.value === 0
+              ? ""
+    : `
+                    <div class="total-row">
+                        <span>Payment Method:</span>
+                    <span>${getPaymentTypeText(completedPaymentType.value, completedCardType.value)}</span>
+                    </div>
+                    `;
   const completedItemsList = completedItems.value || [];
-  const minimumTableRows = 10;
-  const emptyRowCount = Math.max(0, minimumTableRows - completedItemsList.length);
   const itemRowsHtml = completedItemsList
     .map(
       (item, index) => `
@@ -1876,19 +1962,6 @@ const printReceipt = () => {
           <td class="col-qty">${item.quantity || 0}</td>
           <td class="col-rate">${(item.price || 0).toFixed(2)}</td>
           <td class="col-total">${((item.price || 0) * (item.quantity || 0)).toFixed(2)}</td>
-        </tr>
-      `
-    )
-    .join("");
-  const fillerRowsHtml = Array.from({ length: emptyRowCount })
-    .map(
-      () => `
-        <tr>
-          <td class="col-no">&nbsp;</td>
-          <td class="col-item">&nbsp;</td>
-          <td class="col-qty">&nbsp;</td>
-          <td class="col-rate">&nbsp;</td>
-          <td class="col-total">&nbsp;</td>
         </tr>
       `
     )
@@ -2094,7 +2167,6 @@ ESTD:1926
                     </thead>
                     <tbody>
                     ${itemRowsHtml}
-                    ${fillerRowsHtml}
                     </tbody>
                 </table>
 
@@ -2136,6 +2208,11 @@ ESTD:1926
     completedNetAmount.value
   }</span>
                     </div>
+                    <div class="total-row">
+                      <span>Payment Status:</span>
+                    <span>${paymentStatusLabel}</span>
+                    </div>
+                    ${paymentDetailsHtml}
                     <div class="total-row">
                         <span>Paid Amount:</span>
                     <span>${currency} ${

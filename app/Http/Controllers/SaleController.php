@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class SaleController extends Controller
 {
@@ -115,14 +116,22 @@ class SaleController extends Controller
             'items.*.quantity' => 'required|numeric|min:1',
             'items.*.price' => 'required|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
-            'payments' => 'required|array|min:1',
+            'payments' => 'nullable|array',
             'payments.*.payment_type' => 'required|in:0,1,2',
             'payments.*.amount' => 'required|numeric|min:0',
             'payments.*.card_type' => 'nullable|in:visa,mastercard',
             'paid_status' => 'required|in:0,1',
         ]);
 
-        foreach ($request->payments as $index => $payment) {
+        $payments = collect($request->payments ?? []);
+
+        if ((int) $request->paid_status === 1 && $payments->isEmpty()) {
+            return back()
+                ->withErrors(['payments' => 'At least one payment method is required for paid sales.'])
+                ->withInput();
+        }
+
+        foreach ($payments as $index => $payment) {
             if ((int) ($payment['payment_type'] ?? -1) === 1 && empty($payment['card_type'])) {
                 return back()
                     ->withErrors(["payments.$index.card_type" => 'Card type is required for card payments.'])
@@ -145,14 +154,14 @@ class SaleController extends Controller
             $netAmount = $totalAmount - $discount;
 
             // Calculate total paid from all payments
-            $totalPaid = collect($request->payments)->sum('amount');
+            $totalPaid = $payments->sum('amount');
             $balance = $netAmount - $totalPaid;
 
             // Convert customer_type to integer (1 = Retail, 2 = Wholesale)
             $type = $request->customer_type === 'wholesale' ? 2 : 1;
 
             // Determine second payment if two payment methods provided
-            $secondPayment = isset($request->payments[1]) ? $request->payments[1] : null;
+            $secondPayment = $payments->get(1);
 
             // Create sale
             $sale = Sale::create([
@@ -222,7 +231,7 @@ class SaleController extends Controller
 
             // Create a single income record for the actual sale amount (not payment amount)
             // This ensures accurate income reporting when payments exceed sale amount
-            $primaryPayment = $request->payments[0] ?? [];
+            $primaryPayment = $payments->get(0, ['payment_type' => 0, 'amount' => 0, 'card_type' => null]);
 
             Income::create([
                 'sale_id' => $sale->id,
@@ -249,6 +258,227 @@ class SaleController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Sale failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Return details for a single unpaid sale (GET /sales/{sale}/unpaid-details)
+     */
+    public function unpaidDetails(Request $request, Sale $sale)
+    {
+        $user = Auth::user();
+
+        if ($user->role === 2 && $sale->division_id && $sale->division_id !== $user->division_id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        if ((int) $sale->paid_status !== 0) {
+            return response()->json(['error' => 'Only unpaid sales can be loaded.'], 422);
+        }
+
+        $sale->load(['products.product.salesUnit']);
+
+        return response()->json([
+            'id' => $sale->id,
+            'invoice_no' => $sale->invoice_no,
+            'customer_id' => $sale->customer_id,
+            'customer_type' => (int) $sale->type === 2 ? 'wholesale' : 'retail',
+            'sale_date' => optional($sale->sale_date)->format('Y-m-d'),
+            'discount' => (float) ($sale->discount ?? 0),
+            'items' => $sale->products->map(function ($item) {
+                return [
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product?->name ?? 'Unknown Product',
+                    'price' => (float) $item->price,
+                    'quantity' => (int) $item->quantity,
+                    'sale_unit' => $item->product?->salesUnit?->name ?? 'Not found',
+                ];
+            })->values(),
+        ]);
+    }
+
+    /**
+     * Update an existing unpaid sale and optionally mark it as paid (PATCH /sales/{sale}/complete-unpaid)
+     */
+    public function completeUnpaid(Request $request, Sale $sale)
+    {
+        $user = Auth::user();
+
+        if ($user->role === 2 && $sale->division_id && $sale->division_id !== $user->division_id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        if ((int) $sale->paid_status !== 0) {
+            return back()->with('error', 'Only unpaid sales can be updated here.');
+        }
+
+        $request->validate([
+            'invoice_no' => [
+                'required',
+                Rule::unique('sales', 'invoice_no')->ignore($sale->id),
+            ],
+            'customer_type' => 'required|in:retail,wholesale',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|numeric|min:1',
+            'items.*.price' => 'required|numeric|min:0',
+            'discount' => 'nullable|numeric|min:0',
+            'payments' => 'nullable|array',
+            'payments.*.payment_type' => 'required|in:0,1,2',
+            'payments.*.amount' => 'required|numeric|min:0',
+            'payments.*.card_type' => 'nullable|in:visa,mastercard',
+            'paid_status' => 'required|in:0,1',
+        ]);
+
+        $payments = collect($request->payments ?? []);
+
+        if ((int) $request->paid_status === 1 && $payments->isEmpty()) {
+            return back()
+                ->withErrors(['payments' => 'At least one payment method is required for paid sales.'])
+                ->withInput();
+        }
+
+        foreach ($payments as $index => $payment) {
+            if ((int) ($payment['payment_type'] ?? -1) === 1 && empty($payment['card_type'])) {
+                return back()
+                    ->withErrors(["payments.$index.card_type" => 'Card type is required for card payments.'])
+                    ->withInput();
+            }
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $existingItems = $sale->products()
+                ->select('product_id', DB::raw('SUM(quantity) as qty'))
+                ->groupBy('product_id')
+                ->pluck('qty', 'product_id')
+                ->map(fn($q) => (float) $q);
+
+            $newItemsCollection = collect($request->items)
+                ->groupBy('product_id')
+                ->map(function ($rows) {
+                    return $rows->sum(function ($row) {
+                        return (float) ($row['quantity'] ?? 0);
+                    });
+                });
+
+            $allProductIds = $existingItems->keys()->merge($newItemsCollection->keys())->unique();
+
+            foreach ($allProductIds as $productId) {
+                $oldQty = (float) ($existingItems[$productId] ?? 0);
+                $newQty = (float) ($newItemsCollection[$productId] ?? 0);
+                $diff = $newQty - $oldQty;
+
+                if ($diff > 0) {
+                    $product = Product::find($productId);
+                    if (!$product || $product->shop_quantity_in_sales_unit < $diff) {
+                        DB::rollBack();
+                        return back()->with('error', 'Insufficient stock for one or more products.');
+                    }
+
+                    $product->decrement('shop_quantity_in_sales_unit', $diff);
+                    ProductMovement::recordMovement(
+                        $productId,
+                        ProductMovement::TYPE_SALE,
+                        -$diff,
+                        $sale->invoice_no . ' (update)'
+                    );
+                } elseif ($diff < 0) {
+                    $restoreQty = abs($diff);
+                    $product = Product::find($productId);
+                    if ($product) {
+                        $product->increment('shop_quantity_in_sales_unit', $restoreQty);
+                    }
+
+                    ProductMovement::recordMovement(
+                        $productId,
+                        ProductMovement::TYPE_SALE,
+                        $restoreQty,
+                        $sale->invoice_no . ' (update)'
+                    );
+                }
+            }
+
+            $totalAmount = collect($request->items)->sum(function ($item) {
+                return ((float) ($item['price'] ?? 0)) * ((float) ($item['quantity'] ?? 0));
+            });
+
+            $discount = (float) ($request->discount ?? 0);
+            $netAmount = $totalAmount - $discount;
+            $totalPaid = (float) $payments->sum('amount');
+            $balance = $netAmount - $totalPaid;
+
+            $type = $request->customer_type === 'wholesale' ? 2 : 1;
+            $secondPayment = $payments->get(1);
+
+            $sale->update([
+                'invoice_no' => $request->invoice_no,
+                'type' => $type,
+                'customer_id' => $request->customer_id ?: null,
+                'user_id' => Auth::id(),
+                'total_amount' => $totalAmount,
+                'discount' => $discount,
+                'net_amount' => $netAmount,
+                'paid_amount' => $totalPaid,
+                'balance' => $balance,
+                'paid_status' => (int) $request->paid_status,
+                'payment2_type' => $secondPayment ? (int) $secondPayment['payment_type'] : null,
+                'payment2_amount' => $secondPayment ? (float) $secondPayment['amount'] : null,
+                'payment2_card_type' => ($secondPayment && (int) ($secondPayment['payment_type'] ?? -1) === 1)
+                    ? ($secondPayment['card_type'] ?? null) : null,
+                'sale_date' => $request->sale_date,
+            ]);
+
+            $sale->products()->delete();
+
+            foreach ($request->items as $item) {
+                $lineTotal = ((float) $item['price']) * ((float) $item['quantity']);
+                $lineDiscountAmount = $totalAmount > 0
+                    ? ($lineTotal / $totalAmount) * $discount
+                    : 0;
+                $lineNetAmount = $lineTotal - $lineDiscountAmount;
+                $discountedUnitPrice = (float) $item['quantity'] > 0
+                    ? $lineNetAmount / (float) $item['quantity']
+                    : (float) $item['price'];
+
+                SalesProduct::create([
+                    'sale_id' => $sale->id,
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'price' => round($discountedUnitPrice, 2),
+                    'total' => $lineTotal,
+                    'discount_amount' => round($lineDiscountAmount, 2),
+                    'net_amount' => round($lineNetAmount, 2),
+                    'is_return' => false,
+                ]);
+            }
+
+            $primaryPayment = $payments->get(0, ['payment_type' => 0, 'amount' => 0, 'card_type' => null]);
+
+            Income::updateOrCreate(
+                [
+                    'sale_id' => $sale->id,
+                    'transaction_type' => 'sale',
+                ],
+                [
+                    'source' => 'Sale - ' . $sale->invoice_no,
+                    'amount' => $sale->net_amount,
+                    'income_date' => $request->sale_date,
+                    'payment_type' => $primaryPayment['payment_type'] ?? 0,
+                    'card_type' => ((int) ($primaryPayment['payment_type'] ?? -1) === 1)
+                        ? ($primaryPayment['card_type'] ?? null)
+                        : null,
+                ]
+            );
+
+            DB::commit();
+
+            return redirect()->route('sales.index')
+                ->with('success', 'Unpaid sale updated successfully! Invoice: ' . $sale->invoice_no);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Sale update failed: ' . $e->getMessage());
         }
     }
 
