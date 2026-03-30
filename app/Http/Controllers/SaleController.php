@@ -119,6 +119,7 @@ class SaleController extends Controller
             'payments.*.payment_type' => 'required|in:0,1,2',
             'payments.*.amount' => 'required|numeric|min:0',
             'payments.*.card_type' => 'nullable|in:visa,mastercard',
+            'paid_status' => 'required|in:0,1',
         ]);
 
         foreach ($request->payments as $index => $payment) {
@@ -150,6 +151,9 @@ class SaleController extends Controller
             // Convert customer_type to integer (1 = Retail, 2 = Wholesale)
             $type = $request->customer_type === 'wholesale' ? 2 : 1;
 
+            // Determine second payment if two payment methods provided
+            $secondPayment = isset($request->payments[1]) ? $request->payments[1] : null;
+
             // Create sale
             $sale = Sale::create([
                 'invoice_no' => $request->invoice_no,
@@ -162,6 +166,11 @@ class SaleController extends Controller
                 'net_amount' => $netAmount,
                 'paid_amount' => $totalPaid,
                 'balance' => $balance,
+                'paid_status' => (int) $request->paid_status,
+                'payment2_type' => $secondPayment ? (int) $secondPayment['payment_type'] : null,
+                'payment2_amount' => $secondPayment ? (float) $secondPayment['amount'] : null,
+                'payment2_card_type' => ($secondPayment && (int) ($secondPayment['payment_type'] ?? -1) === 1)
+                    ? ($secondPayment['card_type'] ?? null) : null,
                 'sale_date' => $request->sale_date,
             ]);
 
@@ -243,6 +252,101 @@ class SaleController extends Controller
         }
     }
 
+
+    /**
+     * Mark a sale as paid (PATCH /sales/{id}/mark-paid)
+     */
+    public function markAsPaid(Request $request, Sale $sale)
+    {
+        $user = Auth::user();
+
+        // Cashiers can only update their own division's sales
+        if ($user->role === 2 && $sale->division_id && $sale->division_id !== $user->division_id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $sale->update(['paid_status' => 1]);
+
+        return response()->json(['success' => true, 'sale_id' => $sale->id]);
+    }
+
+    /**
+     * Return JSON list of unpaid sales (GET /sales/unpaid-list)
+     * Scoped to cashier's division for role=2, all for admin.
+     */
+    public function unpaidList(Request $request)
+    {
+        $user = Auth::user();
+
+        $sales = Sale::with('customer:id,name')
+            ->select('id', 'invoice_no', 'customer_id', 'division_id', 'net_amount', 'sale_date', 'paid_status', 'payment2_type', 'payment2_amount')
+            ->where('paid_status', 0)
+            ->when($user->role === 2 && $user->division_id, function ($q) use ($user) {
+                $q->where('division_id', $user->division_id);
+            })
+            ->orderBy('sale_date', 'desc')
+            ->orderBy('id', 'desc')
+            ->limit(100)
+            ->get()
+            ->map(function ($s) {
+                return [
+                    'id' => $s->id,
+                    'invoice_no' => $s->invoice_no,
+                    'customer_name' => $s->customer?->name ?? 'Walk-in',
+                    'net_amount' => number_format($s->net_amount, 2),
+                    'sale_date' => $s->sale_date,
+                ];
+            });
+
+        return response()->json($sales);
+    }
+
+    /**
+     * Unpaid Sales Report page (GET /reports/unpaid-sales)
+     */
+    public function unpaidReport(Request $request)
+    {
+        $user = Auth::user();
+        $startDate = $request->input('start_date');
+        $endDate   = $request->input('end_date');
+
+        $query = Sale::with('customer:id,name', 'user:id,name')
+            ->select('id', 'invoice_no', 'customer_id', 'user_id', 'division_id', 'total_amount', 'discount', 'net_amount', 'sale_date', 'paid_status')
+            ->where('paid_status', 0)
+            ->when($user->role === 2 && $user->division_id, function ($q) use ($user) {
+                $q->where('division_id', $user->division_id);
+            })
+            ->when($startDate, fn($q) => $q->where('sale_date', '>=', $startDate))
+            ->when($endDate,   fn($q) => $q->where('sale_date', '<=', $endDate))
+            ->orderBy('sale_date', 'desc')
+            ->orderBy('id', 'desc');
+
+        $sales = $query->paginate(20)->withQueryString();
+        $totalUnpaid = number_format($query->sum('net_amount'), 2);
+
+        $sales->getCollection()->transform(function ($s) {
+            return [
+                'id' => $s->id,
+                'invoice_no' => $s->invoice_no,
+                'customer_name' => $s->customer?->name ?? 'Walk-in',
+                'cashier' => $s->user?->name ?? 'N/A',
+                'total_amount' => number_format($s->total_amount, 2),
+                'discount' => number_format($s->discount, 2),
+                'net_amount' => number_format($s->net_amount, 2),
+                'sale_date' => $s->sale_date,
+            ];
+        });
+
+        $currencySymbol = \App\Models\CompanyInformation::first();
+
+        return \Inertia\Inertia::render('Reports/UnpaidSalesReport', [
+            'sales'         => $sales,
+            'totalUnpaid'   => $totalUnpaid,
+            'startDate'     => $startDate,
+            'endDate'       => $endDate,
+            'currencySymbol' => $currencySymbol,
+        ]);
+    }
 
     private function getPaymentTypeName($type)
     {

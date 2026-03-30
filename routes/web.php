@@ -232,6 +232,8 @@ Route::middleware(['auth', 'role:0,3,4'])->group(function () {
 */
 Route::middleware(['auth', 'role:0,1,2'])->group(function () {
     // Sales Management
+    Route::get('/sales/unpaid-list', [SaleController::class, 'unpaidList'])->name('sales.unpaid-list');
+    Route::patch('/sales/{sale}/mark-paid', [SaleController::class, 'markAsPaid'])->name('sales.mark-paid');
     Route::resource('sales', SaleController::class, ['only' => ['index', 'store', 'update', 'destroy']]);
 });
 
@@ -413,6 +415,9 @@ Route::middleware(['auth', 'role:0,1,2,3'])->group(function () {
         Route::get('/product-movement-sales-optimization', [ReportController::class, 'productMovementSalesOptimizationReport'])->name('product-movement-sales-optimization');
         Route::get('/export/product-movement-sales-optimization/pdf', [ReportController::class, 'exportProductMovementSalesOptimizationPdf'])->name('export.product-movement-sales-optimization.pdf');
         Route::get('/export/product-movement-sales-optimization/csv', [ReportController::class, 'exportProductMovementSalesOptimizationCsv'])->name('export.product-movement-sales-optimization.csv');
+
+        // Unpaid Sales Report
+        Route::get('/unpaid-sales', [SaleController::class, 'unpaidReport'])->name('unpaid-sales');
     });
 });
 

@@ -32,6 +32,10 @@ class Sale extends Model
         'return_amount',
         'balance',
         'has_return',
+        'paid_status',
+        'payment2_type',
+        'payment2_amount',
+        'payment2_card_type',
         'sale_date',
     ];
 

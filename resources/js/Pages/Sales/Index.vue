@@ -22,6 +22,12 @@
           </div>
           <div class="flex items-center gap-3">
             <button
+              @click="openUnpaidModal"
+              class="px-6 py-2.5 rounded-[5px] font-medium text-sm bg-orange-500 hover:bg-orange-600 text-white transition-all duration-200 shadow-sm"
+            >
+              ⏳ Unpaid Sales
+            </button>
+            <button
               @click="goToCreateSalesReturn"
               data-shortcut="F12"
               class="px-6 py-2.5 rounded-[5px] font-medium text-sm bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 shadow-sm"
@@ -515,18 +521,25 @@
                 </button>
               </div>
 
-              <!-- Submit Button -->
-              <button
-                @click="submitSale"
-                data-shortcut="Enter"
-                :disabled="
-                  form.items.length === 0 || form.payments.length === 0 || form.processing
-                "
-                class="mt-3 w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-4 px-4 rounded-lg transition text-lg shadow-lg"
-              >
-                <span v-if="form.processing">⏳ Processing...</span>
-                <span v-else>✅ Complete Sale</span>
-              </button>
+              <!-- Submit Buttons: Paid / Unpaid -->
+              <div class="mt-3 grid grid-cols-2 gap-3">
+                <button
+                  @click="submitSale(1)"
+                  :disabled="form.items.length === 0 || form.payments.length === 0 || form.processing"
+                  class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 px-4 rounded-lg transition text-lg shadow-lg"
+                >
+                  <span v-if="form.processing">⏳ Processing...</span>
+                  <span v-else>✅ Paid</span>
+                </button>
+                <button
+                  @click="submitSale(0)"
+                  :disabled="form.items.length === 0 || form.processing"
+                  class="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 px-4 rounded-lg transition text-lg shadow-lg"
+                >
+                  <span v-if="form.processing">⏳ Processing...</span>
+                  <span v-else>📋 Unpaid</span>
+                </button>
+              </div>
 
               <!-- Quick Actions -->
               <div class="mt-4 text-xs text-gray-400 text-center">
@@ -544,6 +557,48 @@
         </div>
       </div>
     </div>
+
+    <!-- Unpaid Sales Modal -->
+    <Modal :show="showUnpaidModal" @close="showUnpaidModal = false" max-width="3xl">
+      <div class="bg-white p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold text-gray-800">⏳ Unpaid Sales</h2>
+          <button @click="showUnpaidModal = false" class="text-gray-500 hover:text-gray-700 text-xl font-bold">✕</button>
+        </div>
+        <div v-if="unpaidLoading" class="text-center py-8 text-gray-500">Loading...</div>
+        <div v-else-if="unpaidSales.length === 0" class="text-center py-8 text-gray-500">No unpaid sales found.</div>
+        <div v-else class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b-2 border-blue-600">
+                <th class="px-3 py-2 text-left text-blue-700 font-semibold">Invoice</th>
+                <th class="px-3 py-2 text-left text-blue-700 font-semibold">Customer</th>
+                <th class="px-3 py-2 text-left text-blue-700 font-semibold">Date</th>
+                <th class="px-3 py-2 text-right text-blue-700 font-semibold">Amount</th>
+                <th class="px-3 py-2 text-center text-blue-700 font-semibold">Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              <tr v-for="sale in unpaidSales" :key="sale.id" class="hover:bg-orange-50">
+                <td class="px-3 py-3 font-medium text-gray-800">{{ sale.invoice_no }}</td>
+                <td class="px-3 py-3 text-gray-700">{{ sale.customer_name }}</td>
+                <td class="px-3 py-3 text-gray-600">{{ sale.sale_date }}</td>
+                <td class="px-3 py-3 text-right font-semibold text-orange-600">{{ page.props.currency || 'Rs.' }} {{ sale.net_amount }}</td>
+                <td class="px-3 py-3 text-center">
+                  <button
+                    @click="markAsPaid(sale)"
+                    :disabled="sale.marking"
+                    class="px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white text-xs font-semibold rounded-[5px] transition"
+                  >
+                    {{ sale.marking ? 'Saving...' : '✅ Mark as Paid' }}
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </Modal>
 
     <!-- Product Selection Modal -->
     <Modal :show="showProductModal" @close="closeProductModal" max-width="6xl">
@@ -1049,6 +1104,7 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, useForm, router, usePage } from "@inertiajs/vue3";
+import axios from "axios";
 const page = usePage();
 import { ref, computed, onMounted, nextTick } from "vue";
 import { logActivity } from "@/composables/useActivityLog";
@@ -1088,6 +1144,7 @@ const form = useForm({
   paid_amount: 0,
   payments: [], // Multiple payments
   quotation_id: null, // Track loaded quotation for status update
+  paid_status: 1, // 1 = Paid, 0 = Pending
 });
 
 const selectedProduct = ref(null);
@@ -1096,6 +1153,9 @@ const barcodeInput = ref("");
 const barcodeField = ref(null);
 const showSuccessModal = ref(false);
 const showPaymentModal = ref(false);
+const showUnpaidModal = ref(false);
+const unpaidSales = ref([]);
+const unpaidLoading = ref(false);
 const showProductModal = ref(false);
 const showQuickAddCustomer = ref(false);
 const paymentMethod = ref(0);
@@ -1665,16 +1725,24 @@ const updateCartPrices = () => {
 };
 
 // Submit sale with multiple payments
-const submitSale = () => {
+const submitSale = (paidStatus = 1) => {
   if (form.items.length === 0) {
     alert("Please add items to cart");
     return;
   }
 
-  if (form.payments.length === 0) {
+  // Unpaid sales don't require a payment entry
+  if (paidStatus === 1 && form.payments.length === 0) {
     alert("Please click the Payment button to proceed.");
     return;
   }
+
+  // For unpaid, add a zero-amount cash payment placeholder if none provided
+  if (paidStatus === 0 && form.payments.length === 0) {
+    form.payments = [{ payment_type: 0, amount: 0, card_type: null }];
+  }
+
+  form.paid_status = paidStatus;
 
   if (balance.value > 0) {
     if (!confirm(`Unpaid balance: Rs. ${(balance.value||0).toFixed(2)}. Continue?`)) {
@@ -1744,6 +1812,31 @@ const submitSale = () => {
       alert(errorMsg);
     },
   });
+};
+
+// Unpaid sales modal
+const openUnpaidModal = async () => {
+  showUnpaidModal.value = true;
+  unpaidLoading.value = true;
+  try {
+    const response = await axios.get(route('sales.unpaid-list'));
+    unpaidSales.value = (response.data || []).map(s => ({ ...s, marking: false }));
+  } catch (e) {
+    console.error('Failed to load unpaid sales', e);
+  } finally {
+    unpaidLoading.value = false;
+  }
+};
+
+const markAsPaid = async (sale) => {
+  sale.marking = true;
+  try {
+    await axios.patch(route('sales.mark-paid', sale.id));
+    unpaidSales.value = unpaidSales.value.filter(s => s.id !== sale.id);
+  } catch (e) {
+    alert('Failed to mark as paid.');
+    sale.marking = false;
+  }
 };
 
 // Print receipt
