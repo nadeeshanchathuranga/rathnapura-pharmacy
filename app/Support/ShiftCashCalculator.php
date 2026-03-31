@@ -54,15 +54,43 @@ class ShiftCashCalculator
 
     public static function cashSalesTotalForShift(Shift $shift): float
     {
-        $cashPrimary = (float) self::salesQueryForShift($shift)
-            ->where('payment1_type', 0)
-            ->sum('payment1_amount');
+        $sales = self::salesQueryForShift($shift)
+            ->select([
+                'net_amount',
+                'payment1_type',
+                'payment1_amount',
+                'payment2_type',
+                'payment2_amount',
+            ])
+            ->get();
 
-        $cashSecond = (float) self::salesQueryForShift($shift)
-            ->where('payment2_type', 0)
-            ->sum('payment2_amount');
+        $total = 0.0;
 
-        return round($cashPrimary + $cashSecond, 2);
+        foreach ($sales as $sale) {
+            $netAmount = (float) ($sale->net_amount ?? 0);
+            $cashReceived = 0.0;
+            $nonCashReceived = 0.0;
+
+            if ((int) ($sale->payment1_type ?? -1) === 0) {
+                $cashReceived += (float) ($sale->payment1_amount ?? 0);
+            } elseif (!is_null($sale->payment1_type)) {
+                $nonCashReceived += (float) ($sale->payment1_amount ?? 0);
+            }
+
+            if ((int) ($sale->payment2_type ?? -1) === 0) {
+                $cashReceived += (float) ($sale->payment2_amount ?? 0);
+            } elseif (!is_null($sale->payment2_type)) {
+                $nonCashReceived += (float) ($sale->payment2_amount ?? 0);
+            }
+
+            $totalReceived = $cashReceived + $nonCashReceived;
+            $change = max(0.0, $totalReceived - $netAmount);
+            $cashApplied = max(0.0, $cashReceived - $change);
+
+            $total += $cashApplied;
+        }
+
+        return round($total, 2);
     }
 
     public static function tillTotalsForShift(Shift $shift): array
