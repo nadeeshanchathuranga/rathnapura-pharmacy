@@ -554,13 +554,13 @@ const printBarcode = () => {
           flex-wrap: wrap;
           width: 80mm;
           justify-content: center;
-          gap: 1mm 2mm;
+          gap: 2mm 2mm;
         }
         .barcode-item {
           width: 38mm;
-          height: 25mm;
+          height: 30mm;
           text-align: center;
-          padding: 1mm;
+          padding: 1.5mm;
           display: flex;
           flex-direction: column;
           justify-content: center;
@@ -569,8 +569,8 @@ const printBarcode = () => {
           background: white;
         }
         .barcode-item svg {
-          max-width: 34mm;
-          max-height: 7mm;
+          max-width: 36mm;
+          max-height: 14mm;
         }
         .barcode-item p {
           margin: 0;
@@ -615,10 +615,10 @@ const printBarcode = () => {
             try {
               JsBarcode("#printBarcode" + i, "${props.product?.barcode || ""}", {
                 format: "CODE128",
-                width: 0.8,
-                height: 18,
+                width: 1.2,
+                height: 30,
                 displayValue: false,
-                margin: 0
+                margin: 2
               });
             } catch (e) {
               console.error('Barcode generation error:', e);
