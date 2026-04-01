@@ -160,6 +160,7 @@
       :available-products="availableProducts"
       :grnNumber="grnNumber"
       :measurementUnits="measurementUnits"
+      :purchase-orders="purchaseOrders"
     />
 
     <!-- View Modal -->
@@ -192,6 +193,7 @@ defineProps({
   availableProducts: Array,
   grnNumber: String,
   measurementUnits: Array,
+  purchaseOrders: { type: Array, default: () => [] },
 });
 
 const isCreateModalOpen = ref(false);

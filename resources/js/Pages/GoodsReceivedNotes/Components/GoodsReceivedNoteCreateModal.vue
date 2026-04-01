@@ -27,6 +27,33 @@
       </div>
 
       <form @submit.prevent="submitForm">
+        <!-- LINK FROM PURCHASE ORDER (optional) -->
+        <div class="mb-4 bg-white rounded-xl p-4 shadow-sm border border-blue-100">
+          <h3 class="mb-3 text-lg font-semibold text-blue-600 flex items-center gap-2">
+            🛒 Link to Purchase Order (Optional)
+          </h3>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Select Purchase Order</label>
+              <select
+                v-model="selectedPoId"
+                @change="onPoSelect"
+                class="w-full px-3 py-2 text-sm text-gray-800 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">-- None (Direct GRN) --</option>
+                <option v-for="po in purchaseOrders" :key="po.id" :value="po.id">
+                  {{ po.order_number }} — {{ po.supplier?.name }}
+                </option>
+              </select>
+            </div>
+            <div v-if="selectedPoId" class="flex items-end">
+              <p class="text-xs text-green-600 font-medium">
+                ✅ PO linked. Supplier and products pre-filled. You can adjust quantities below.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <!-- GRN DETAILS -->
         <div
           class="mb-4 bg-white rounded-xl p-4 shadow-sm border border-gray-200"
@@ -410,6 +437,7 @@ const props = defineProps({
   suppliers: Array,
   measurementUnits: Array,
   availableProducts: Array,
+  purchaseOrders: { type: Array, default: () => [] },
   grnNumber: {
     type: String,
     default: "",
@@ -417,6 +445,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["update:open"]);
+
+const selectedPoId = ref("");
 
 const createEmptyProductRow = () => ({
   product_id: null,
@@ -443,6 +473,7 @@ const form = ref({
   discount_type: "amount",
   tax_total: 0,
   remarks: "",
+  purchase_order_id: null,
 });
 
 const products = ref([createEmptyProductRow()]);
@@ -507,6 +538,7 @@ const close = () => {
 };
 
 const resetForm = () => {
+  selectedPoId.value = "";
   form.value = {
     goods_received_note_no: props.grnNumber,
     supplier_id: "",
@@ -517,12 +549,55 @@ const resetForm = () => {
     discount_type: "amount",
     tax_total: 0,
     remarks: "",
+    purchase_order_id: null,
   };
   products.value = [createEmptyProductRow()];
 };
 
-const onProductSelect = (index) => {
-  const product = products.value[index];
+// Pre-fill GRN from a Purchase Order
+const onPoSelect = () => {
+  const poId = Number(selectedPoId.value);
+  if (!poId) {
+    form.value.purchase_order_id = null;
+    form.value.supplier_id = "";
+    products.value = [createEmptyProductRow()];
+    return;
+  }
+
+  const po = props.purchaseOrders.find((p) => p.id === poId);
+  if (!po) return;
+
+  form.value.purchase_order_id = poId;
+  form.value.supplier_id = po.supplier_id;
+
+  // Pre-fill products from the PO line items
+  if (po.products && po.products.length > 0) {
+    products.value = po.products.map((item) => {
+      const prod = props.availableProducts.find((p) => p.id === item.product_id);
+      return {
+        product_id: item.product_id,
+        measurement_unit_id: item.measurement_unit_id ?? prod?.measurement_unit_id ?? null,
+        requested_quantity: parseFloat(item.quantity) || 1,
+        issued_quantity: parseFloat(item.quantity) || 1,
+        purchase_price: parseFloat(item.purchase_price) || 0,
+        discount_percentage: parseFloat(item.discount_percentage) || 0,
+        discount: 0,
+        unit:
+          item.measurement_unit?.name ||
+          prod?.purchaseUnit?.name ||
+          prod?.measurement_unit?.name ||
+          "N/A",
+        product_name: item.product?.name || prod?.name || "",
+        total: 0,
+        error: null,
+      };
+    });
+    // Recalculate totals for each pre-filled row
+    products.value.forEach((_, idx) => calculateTotal(idx));
+  }
+};
+
+const onProductSelect = (index) => {  const product = products.value[index];
   if (isProductSelectedInOtherRows(product.product_id, index)) {
     alert("This product is already added. Each product can be selected only once per GRN.");
     products.value[index] = createEmptyProductRow();

@@ -11,6 +11,7 @@ use App\Models\CompanyInformation;
 use App\Models\ProductMovement;
 use App\Models\MeasurementUnit;
 use App\Models\ProductAvailableQuantity;
+use App\Models\PurchaseOrder;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -69,6 +70,13 @@ class GoodReceiveNoteController extends Controller
         
         // Load measurement units for display purposes
         $measurementUnits = MeasurementUnit::orderBy('name')->get();
+
+        // Load approved Purchase Orders for linking to GRN
+        $purchaseOrders = PurchaseOrder::with(['supplier', 'products.product'])
+            ->whereIn('status', ['approved'])
+            ->orderByDesc('order_date')
+            ->get();
+
         return Inertia::render('GoodsReceivedNotes/Index', [
             'goodsReceivedNotes' => $goodsReceivedNotes,
             'measurementUnits' => $measurementUnits,
@@ -76,6 +84,7 @@ class GoodReceiveNoteController extends Controller
             'availableProducts' => $products,
             'grnNumber' => $this->generateGoodReceiveNoteNumber(),
             'currencySymbol' => $currencySymbol,
+            'purchaseOrders' => $purchaseOrders,
         ]);
     }
 
@@ -105,6 +114,7 @@ class GoodReceiveNoteController extends Controller
             'supplier_due_date' => 'nullable|date',
             'goods_received_note_date'      => 'required|date',
             'batch_number'  => 'nullable|string',
+            'purchase_order_id' => 'nullable|exists:purchase_orders,id',
             'subtotal'      => 'nullable|numeric|min:0',
             'discount'      => 'nullable|numeric|min:0',
             'discount_type' => 'required|in:amount,percentage',
@@ -149,6 +159,7 @@ class GoodReceiveNoteController extends Controller
             // Create main GRN record with default approval_status 'pending'
             $grn = GoodsReceivedNote::create([
                 'purchase_order_request_id'        => null,
+                'purchase_order_id'                => $validated['purchase_order_id'] ?? null,
                 'goods_received_note_no'        => $validated['goods_received_note_no'],
                 'batch_number'  => $validated['batch_number'] ?? null,
                 'supplier_id'   => $validated['supplier_id'],

@@ -248,6 +248,16 @@ onMounted(() => {
 
           <Link
             v-if="[0, 1, 3].includes($page.props.auth.user.role)"
+            :href="route('purchase-orders.index')"
+            class="group bg-white hover:bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200"
+          >
+            <div class="text-4xl mb-3">🛒</div>
+            <div class="font-semibold text-lg text-gray-800 mb-1">Purchase Orders</div>
+            <div class="text-sm text-gray-600">Create and manage formal purchase orders to suppliers.</div>
+          </Link>
+
+          <Link
+            v-if="[0, 1, 3].includes($page.props.auth.user.role)"
             :href="route('good-receive-notes.index')"
             class="group bg-white hover:bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200"
           >

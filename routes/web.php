@@ -16,6 +16,7 @@ use App\Http\Controllers\TaxController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PurchaseOrderRequestsController;
+use App\Http\Controllers\PurchaseOrdersController;
 use App\Http\Controllers\GoodReceiveNoteController;
 use App\Http\Controllers\PurchaseExpenseController;
 use App\Http\Controllers\ProductTransferRequestsController;
@@ -273,6 +274,18 @@ Route::middleware(['auth', 'role:0,1,2,3'])->group(function () {
 
     // Get Purchase Order Details (AJAX endpoint)
     Route::get('/po/{id}/details', [PurchaseOrderRequestsController::class, 'purchaseOrderDetails']);
+
+    // Purchase Orders (Formal PO → GRN workflow)
+    Route::prefix('purchase-orders')->name('purchase-orders.')->group(function () {
+        Route::get('/', [PurchaseOrdersController::class, 'index'])->name('index');
+        Route::post('/', [PurchaseOrdersController::class, 'store'])->name('store');
+        Route::patch('/{purchaseOrder}/status', [PurchaseOrdersController::class, 'updateStatus'])->name('update-status');
+        Route::delete('/{purchaseOrder}', [PurchaseOrdersController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/restore', [PurchaseOrdersController::class, 'restore'])->name('restore');
+        Route::get('/{id}/details', [PurchaseOrdersController::class, 'details'])->name('details');
+        Route::get('/{id}/pdf', [PurchaseOrdersController::class, 'exportPdf'])->name('pdf');
+    });
+
 
     // Goods Received Note Routes
     Route::prefix('goods-received-notes')->name('good-receive-notes.')->group(function () {

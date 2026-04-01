@@ -13,6 +13,7 @@ class GoodsReceivedNote extends Model
 
     protected $fillable = [
         'purchase_order_request_id',
+        'purchase_order_id',
         'goods_received_note_no',
         'batch_number',
         'supplier_id',
@@ -41,5 +42,10 @@ class GoodsReceivedNote extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function purchaseOrder()
+    {
+        return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');
     }
 }
