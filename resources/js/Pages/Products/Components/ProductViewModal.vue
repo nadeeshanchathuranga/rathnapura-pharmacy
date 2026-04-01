@@ -506,7 +506,10 @@ const printBarcode = () => {
   const columns = 2;
 
   // Generate HTML for all barcode labels
-  const currencyLabel = page.props.currencySymbol || page.props.currency || "";
+  // page.props.currencySymbol may be the full CompanyInformation model object
+  const rawSymbol = page.props.currencySymbol;
+  const currencyLabel = typeof rawSymbol === 'string' ? rawSymbol
+    : (rawSymbol?.currency || page.props.currency || "");
   let barcodesHTML = "";
   for (let i = 0; i < quantity; i++) {
     barcodesHTML += `
@@ -568,8 +571,8 @@ const printBarcode = () => {
           background: white;
         }
         .barcode-item svg {
-          max-width: 36mm;
-          max-height: 12mm;
+          max-width: 34mm;
+          max-height: 9mm;
         }
         .barcode-item p {
           margin: 0;
@@ -617,8 +620,8 @@ const printBarcode = () => {
             try {
               JsBarcode("#printBarcode" + i, "${props.product?.barcode || ""}", {
                 format: "CODE128",
-                width: 1.5,
-                height: 40,
+                width: 1,
+                height: 25,
                 displayValue: false,
                 margin: 0
               });
