@@ -491,7 +491,7 @@ onMounted(() => {
           </Link>
 
           <Link
-            v-if="[0, 1].includes($page.props.auth.user.role)"
+            v-if="[0].includes($page.props.auth.user.role)"
             :href="route('reports.expenses')"
             class="group bg-white hover:bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200"
           >
@@ -503,7 +503,7 @@ onMounted(() => {
           </Link>
 
           <Link
-            v-if="[0, 1, 2].includes($page.props.auth.user.role)"
+            v-if="[0, 2].includes($page.props.auth.user.role)"
             :href="route('reports.sales-income')"
             class="group bg-white hover:bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200"
           >
@@ -515,7 +515,7 @@ onMounted(() => {
           </Link>
 
           <Link
-            v-if="[0, 1, 2, 3].includes($page.props.auth.user.role)"
+            v-if="[0, 2, 3].includes($page.props.auth.user.role)"
             :href="route('reports.unpaid-sales')"
             class="group bg-white hover:bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200"
           >
@@ -597,7 +597,7 @@ onMounted(() => {
           </Link>
 
           <Link
-            v-if="[0, 1, 3].includes($page.props.auth.user.role)"
+            v-if="[0, 3].includes($page.props.auth.user.role)"
             :href="route('reports.product-movement-sales-optimization')"
             class="group bg-white hover:bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200"
           >

@@ -19,6 +19,7 @@ class GoodsReceivedNoteProduct extends Model
         'purchase_price', 
         'discount',
         'discount_percentage',
+        'expire_date',
         'total',
     ];
 
@@ -27,6 +28,7 @@ class GoodsReceivedNoteProduct extends Model
         'purchase_price' => 'decimal:2',
         'discount' => 'decimal:2',
         'discount_percentage' => 'decimal:2',
+        'expire_date' => 'date',
         'total' => 'decimal:2',
     ];
 

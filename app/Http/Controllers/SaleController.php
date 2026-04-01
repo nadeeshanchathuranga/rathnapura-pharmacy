@@ -16,6 +16,7 @@ use App\Models\Discount;
 use App\Models\Quotation;
 use App\Models\Shift;
 use App\Models\User;
+use App\Models\ProductAvailableQuantity;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +25,109 @@ use Illuminate\Validation\Rule;
 
 class SaleController extends Controller
 {
+    private function convertSalesToPurchaseUnits(Product $product, float $salesQuantity): float
+    {
+        $purchaseToTransferRate = (float) ($product->purchase_to_transfer_rate ?? 1);
+        $transferToSalesRate = (float) ($product->transfer_to_sales_rate ?? 1);
+        $purchaseToSalesRate = $purchaseToTransferRate * $transferToSalesRate;
+
+        if ($purchaseToSalesRate <= 0) {
+            return $salesQuantity;
+        }
+
+        return $salesQuantity / $purchaseToSalesRate;
+    }
+
+    private function deductGrnBatchesFifo(int $productId, float $salesQuantity): void
+    {
+        if ($salesQuantity <= 0) {
+            return;
+        }
+
+        $product = Product::find($productId);
+        if (!$product) {
+            throw new \Exception("Product not found for FIFO deduction: {$productId}");
+        }
+
+        $purchaseQtyToDeduct = $this->convertSalesToPurchaseUnits($product, $salesQuantity);
+        if ($purchaseQtyToDeduct <= 0) {
+            return;
+        }
+
+        $remaining = $purchaseQtyToDeduct;
+
+        $batches = ProductAvailableQuantity::where('product_id', $productId)
+            ->where('available_quantity', '>', 0)
+            ->orderBy('created_at', 'asc')
+            ->lockForUpdate()
+            ->get();
+
+        // Legacy records may not have per-batch rows yet.
+        if ($batches->isEmpty()) {
+            return;
+        }
+
+        foreach ($batches as $batch) {
+            if ($remaining <= 0) {
+                break;
+            }
+
+            $available = (float) $batch->available_quantity;
+            if ($available <= 0) {
+                continue;
+            }
+
+            $deduct = min($available, $remaining);
+            $batch->decrement('available_quantity', $deduct);
+            $remaining -= $deduct;
+
+            $batch->refresh();
+            if ((float) $batch->available_quantity <= 0 && (float) ($batch->quantity_in_transfer_unit ?? 0) <= 0 && (float) ($batch->quantity_in_sales_unit ?? 0) <= 0) {
+                $batch->delete();
+            }
+        }
+
+        if ($remaining > 0.000001) {
+            throw new \Exception("Insufficient FIFO batch quantity for product: {$product->name}");
+        }
+    }
+
+    private function restoreGrnBatchesLifo(int $productId, float $salesQuantity): void
+    {
+        if ($salesQuantity <= 0) {
+            return;
+        }
+
+        $product = Product::find($productId);
+        if (!$product) {
+            return;
+        }
+
+        $purchaseQtyToRestore = $this->convertSalesToPurchaseUnits($product, $salesQuantity);
+        if ($purchaseQtyToRestore <= 0) {
+            return;
+        }
+
+        $latestBatch = ProductAvailableQuantity::where('product_id', $productId)
+            ->orderBy('created_at', 'desc')
+            ->lockForUpdate()
+            ->first();
+
+        if ($latestBatch) {
+            $latestBatch->increment('available_quantity', $purchaseQtyToRestore);
+            return;
+        }
+
+        ProductAvailableQuantity::create([
+            'product_id' => $productId,
+            'batch_number' => null,
+            'available_quantity' => $purchaseQtyToRestore,
+            'quantity_in_transfer_unit' => 0,
+            'quantity_in_sales_unit' => 0,
+            'unit_id' => $product->purchase_unit_id ?? $product->measurement_unit_id,
+            'goods_received_note_id' => null,
+        ]);
+    }
 
      public function index()
     {
@@ -258,6 +362,9 @@ class SaleController extends Controller
                 $product = Product::find($item['product_id']);
                 $product->decrement('shop_quantity_in_sales_unit', $item['quantity']);
 
+                // Keep GRN-wise availability in sync with sales using FIFO
+                $this->deductGrnBatchesFifo((int) $item['product_id'], (float) $item['quantity']);
+
                 // Record product movement (Sale - reduces stock)
                 ProductMovement::recordMovement(
                     $item['product_id'],
@@ -419,6 +526,7 @@ class SaleController extends Controller
                     }
 
                     $product->decrement('shop_quantity_in_sales_unit', $diff);
+                    $this->deductGrnBatchesFifo((int) $productId, (float) $diff);
                     ProductMovement::recordMovement(
                         $productId,
                         ProductMovement::TYPE_SALE,
@@ -430,6 +538,7 @@ class SaleController extends Controller
                     $product = Product::find($productId);
                     if ($product) {
                         $product->increment('shop_quantity_in_sales_unit', $restoreQty);
+                        $this->restoreGrnBatchesLifo((int) $productId, (float) $restoreQty);
                     }
 
                     ProductMovement::recordMovement(
