@@ -550,20 +550,17 @@ const printBarcode = () => {
           width: 80mm;
         }
         .barcodes-container {
-          display: grid;
-          grid-template-columns: repeat(2, 38mm);
-          column-gap: 2mm;
-          row-gap: 1mm;
-          justify-content: center;
+          display: flex;
+          flex-wrap: wrap;
           width: 80mm;
+          justify-content: center;
+          gap: 1mm 2mm;
         }
         .barcode-item {
           width: 38mm;
           height: 25mm;
           text-align: center;
           padding: 1mm;
-          page-break-inside: avoid;
-          break-inside: avoid;
           display: flex;
           flex-direction: column;
           justify-content: center;
