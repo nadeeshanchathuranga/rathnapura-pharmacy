@@ -129,6 +129,7 @@ class GoodReceiveNoteController extends Controller
             'products.*.purchase_price'     => 'required|numeric|min:0',
             'products.*.discount'           => 'nullable|numeric|min:0',
             'products.*.discount_percentage'=> 'nullable|numeric|min:0|max:100',
+            'products.*.expire_date'        => 'nullable|date',
             'products.*.measurement_unit_id'=> 'nullable|exists:measurement_units,id',
             'products.*.unit'               => 'nullable|string',
             'products.*.total'              => 'nullable|numeric',
@@ -226,6 +227,7 @@ class GoodReceiveNoteController extends Controller
                     'discount'              => $itemDiscountAmount,
                     'discount_percentage'   => $itemDiscountPercentage,
                     'total'                 => $lineTotal,
+                    'expire_date'           => $product['expire_date'] ?? null,
                     'batch_number'          => $batchNumberForProduct,
                    
                 ]);

@@ -368,15 +368,8 @@ Route::middleware(['auth', 'role:0,1,2,3'])->group(function () {
         // Stock Report - Current inventory levels
         Route::get('/stock', [ReportController::class, 'stockReport'])->name('stock');
 
-        // Expenses Report - Expense details and summary
-        Route::get('/expenses', [ReportController::class, 'expensesReport'])->name('expenses');
-
         // Income Report - Income by payment type
         Route::get('/income', [ReportController::class, 'incomeReport'])->name('income');
-
-        // Order History Report - Sales income and returns transactions
-        Route::get('/sales-income', [ReportController::class, 'salesIncomeReport'])->name('sales-income');
-        Route::get('/sales-income/totals', [ReportController::class, 'salesIncomeTotals'])->name('sales-income.totals');
 
         // Sync Report - Sync activity logs
         Route::get('/sync', [\App\Http\Controllers\SyncReportController::class, 'index'])->name('sync');
@@ -403,12 +396,8 @@ Route::middleware(['auth', 'role:0,1,2,3'])->group(function () {
         Route::get('/export/excel', [ReportController::class, 'exportExcel'])->name('export.excel');
         Route::get('/export/product-stock/pdf', [ReportController::class, 'exportProductStockPdf'])->name('export.product-stock.pdf');
         Route::get('/export/product-stock/excel', [ReportController::class, 'exportProductStockExcel'])->name('export.product-stock.excel');
-        Route::get('/export/expenses/pdf', [ReportController::class, 'exportExpensesPdf'])->name('export.expenses.pdf');
-        Route::get('/export/expenses/excel', [ReportController::class, 'exportExpensesExcel'])->name('export.expenses.excel');
         Route::get('/export/income/pdf', [ReportController::class, 'exportIncomePdf'])->name('export.income.pdf');
         Route::get('/export/income/excel', [ReportController::class, 'exportIncomeExcel'])->name('export.income.excel');
-        Route::get('/export/sales-income/pdf', [ReportController::class, 'exportSalesIncomePdf'])->name('export.sales-income.pdf');
-        Route::get('/export/sales-income/excel', [ReportController::class, 'exportSalesIncomeExcel'])->name('export.sales-income.excel');
         // Product sales exports (used by Sales/ProductSales reports)
         Route::get('/export/product-sales/pdf', [ReportController::class, 'exportProductSalesPdf'])->name('export.product-sales.pdf');
         Route::get('/export/product-sales/excel', [ReportController::class, 'exportProductSalesExcel'])->name('export.product-sales.excel');
@@ -441,12 +430,43 @@ Route::middleware(['auth', 'role:0,1,2,3'])->group(function () {
         Route::get('/export/low-stock-store/pdf', [ReportController::class, 'exportLowStockStorePdf'])->name('export.low-stock-store.pdf');
         Route::get('/export/low-stock-store/csv', [ReportController::class, 'exportLowStockStoreCsv'])->name('export.low-stock-store.csv');
         // Product Movement Based Sales Optimization Report
-        Route::get('/product-movement-sales-optimization', [ReportController::class, 'productMovementSalesOptimizationReport'])->name('product-movement-sales-optimization');
+        Route::get('/product-movement-sales-optimization', [ReportController::class, 'productMovementSalesOptimizationReport'])->name('product-movement-sales-optimization')->middleware('role:0,2,3');
         Route::get('/export/product-movement-sales-optimization/pdf', [ReportController::class, 'exportProductMovementSalesOptimizationPdf'])->name('export.product-movement-sales-optimization.pdf');
         Route::get('/export/product-movement-sales-optimization/csv', [ReportController::class, 'exportProductMovementSalesOptimizationCsv'])->name('export.product-movement-sales-optimization.csv');
 
         // Unpaid Sales Report
-        Route::get('/unpaid-sales', [SaleController::class, 'unpaidReport'])->name('unpaid-sales');
+        Route::get('/unpaid-sales', [SaleController::class, 'unpaidReport'])->name('unpaid-sales')->middleware('role:0,2,3');
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Sales Income Report Routes (Order History) - Admin, Manager & Cashier (user_type: 0,1,2)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:0,2'])->group(function () {
+    Route::prefix('reports')->name('reports.')->group(function () {
+        // Order History Report - Sales income and returns transactions
+        Route::get('/sales-income', [ReportController::class, 'salesIncomeReport'])->name('sales-income');
+        Route::get('/sales-income/totals', [ReportController::class, 'salesIncomeTotals'])->name('sales-income.totals');
+        
+        // Export Routes
+        Route::get('/export/sales-income/pdf', [ReportController::class, 'exportSalesIncomePdf'])->name('export.sales-income.pdf');
+        Route::get('/export/sales-income/excel', [ReportController::class, 'exportSalesIncomeExcel'])->name('export.sales-income.excel');
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Expenses Report Routes - Admin & Backoffice (user_type: 0,1)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:0'])->group(function () {
+    Route::prefix('reports')->name('reports.')->group(function () {
+        // Expenses Report - Expense details and summary
+        Route::get('/expenses', [ReportController::class, 'expensesReport'])->name('expenses');
+        Route::get('/export/expenses/pdf', [ReportController::class, 'exportExpensesPdf'])->name('export.expenses.pdf');
+        Route::get('/export/expenses/excel', [ReportController::class, 'exportExpensesExcel'])->name('export.expenses.excel');
     });
 });
 
@@ -515,11 +535,6 @@ Route::middleware(['auth', 'role:0,1, 2,3'])->group(function () {
 */
 Route::middleware(['auth', 'role:0,1,2,3'])->group(function () {
     Route::prefix('reports')->name('reports.')->group(function () {
-        // Expenses Report
-        Route::get('/expenses', [ReportController::class, 'expensesReport'])->name('expenses');
-        Route::get('/export/expenses/pdf', [ReportController::class, 'exportExpensesPdf'])->name('export.expenses.pdf');
-        Route::get('/export/expenses/excel', [ReportController::class, 'exportExpensesExcel'])->name('export.expenses.excel');
-
         // Income Report - Income by payment type
         Route::get('/income', [ReportController::class, 'incomeReport'])->name('income');
 

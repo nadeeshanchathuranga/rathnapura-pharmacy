@@ -202,6 +202,7 @@
                     Purchase Price ({{ page.props.currency || "" }})<span class="text-red-500">*</span>
                   </th>
                   <th class="px-4 py-3 text-blue-600 font-semibold text-sm">Discount (%)</th>
+                  <th class="px-4 py-3 text-blue-600 font-semibold text-sm">Expire Date</th>
                   <th class="px-4 py-3 text-blue-600 font-semibold text-sm">
                     Total ({{ page.props.currency || "" }})
                   </th>
@@ -318,6 +319,14 @@
                   </td>
 
                   <td class="px-4 py-4">
+                    <input
+                      v-model="product.expire_date"
+                      type="date"
+                      class="w-full px-3 py-2 text-sm text-gray-800 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </td>
+
+                  <td class="px-4 py-4">
                     <span class="font-semibold text-gray-900">
                       {{ formatNumber(product.total) }}
                     </span>
@@ -338,7 +347,7 @@
                 </tr>
 
                 <tr v-if="products.length === 0">
-                  <td colspan="8" class="px-6 py-8 text-center text-gray-500 font-medium">
+                  <td colspan="9" class="px-6 py-8 text-center text-gray-500 font-medium">
                     No products added yet. Click "Add Product" to start.
                   </td>
                 </tr>
@@ -457,6 +466,7 @@ const createEmptyProductRow = () => ({
   purchase_price: 0,
   discount_percentage: 0,
   discount: 0,
+  expire_date: "",
   unit: "N/A",
   product_name: "",
   total: 0,
