@@ -13,14 +13,16 @@ class CompanyInformationSeeder extends Seeder
      */
     public function run(): void
     {
-        CompanyInformation::create([
-            'company_name' => 'ABC Company',
-            'address'      => 'Colombo, Sri Lanka',
-            'phone'        => '0771234567',
-            'email'        => 'info@abc.com',
-            'website'      => 'https://abc.com',
-            'logo'         => null, 
-            'currency'     => 'LKR',
-        ]);
+        CompanyInformation::firstOrCreate(
+            ['company_name' => 'ABC Company'],
+            [
+                'address'      => 'Colombo, Sri Lanka',
+                'phone'        => '0771234567',
+                'email'        => 'info@abc.com',
+                'website'      => 'https://abc.com',
+                'logo'         => null, 
+                'currency'     => 'LKR',
+            ]
+        );
     }
 }

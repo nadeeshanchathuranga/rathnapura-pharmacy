@@ -9,7 +9,7 @@ class CurrencySeeder extends Seeder
 {
     public function run(): void
     {
-        Currency::insert([
+        $currencies = [
             [
                 'name'   => 'Sri Lankan Rupee',
                 'code'   => 'LKR',
@@ -70,6 +70,13 @@ class CurrencySeeder extends Seeder
                 'symbol' => 'S$',
                 'status' => 1,
             ],
-        ]);
+        ];
+
+        foreach ($currencies as $currency) {
+            Currency::firstOrCreate(
+                ['code' => $currency['code']],
+                $currency
+            );
+        }
     }
 }
