@@ -26,7 +26,7 @@
         <label class="block mb-2 text-sm font-semibold text-gray-700">
           🖨️ Barcode Print Settings
         </label>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <!-- Quantity Input (1-100) -->
           <div>
             <label class="block mb-1 text-xs text-gray-600">Number of Barcodes</label>
@@ -40,26 +40,13 @@
             />
           </div>
 
-          <!-- Columns Per Row Input (1-10) -->
-          <div>
-            <label class="block mb-1 text-xs text-gray-600">Columns Per Row</label>
-            <input
-              v-model.number="columnsPerRow"
-              type="number"
-              min="1"
-              max="10"
-              class="w-full px-3 py-2 text-sm text-gray-800 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Columns (1-10)"
-            />
-          </div>
-
-          <!-- Print Button with Current Settings Display -->
+          <!-- Print Button -->
           <div class="flex items-end">
             <button
               @click="printBarcode"
               class="w-full px-6 py-2 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 rounded-lg transition-all duration-200 hover:shadow-sm"
             >
-              Print ({{ barcodeQuantity }} × {{ columnsPerRow }} cols)
+              Print {{ barcodeQuantity }} Barcode(s)
             </button>
           </div>
         </div>
@@ -426,7 +413,7 @@ const emit = defineEmits(["update:open"]);
  */
 const barcodeElement = ref(null);
 const barcodeQuantity = ref(1);
-const columnsPerRow = ref(5);
+const columnsPerRow = ref(2);
 
 // expose Inertia page props for currency display
 const page = usePage();
@@ -515,8 +502,8 @@ const printBarcode = () => {
   // Clamp quantity between 1 and 100
   const quantity = Math.min(Math.max(barcodeQuantity.value || 1, 1), 100);
 
-  // Clamp columns per row between 1 and 10
-  const columns = Math.min(Math.max(columnsPerRow.value || 5, 1), 10);
+  // Fixed 2-column layout for 80mm label paper
+  const columns = 2;
 
   // Generate HTML for all barcode labels
   const currencyLabel = page.props.currencySymbol || page.props.currency || "";
@@ -550,27 +537,27 @@ const printBarcode = () => {
           box-sizing: border-box;
         }
         @page {
-
-          margin: 5mm;
+          size: 80mm auto;
+          margin: 1mm;
         }
         body {
           margin: 0;
-          padding: 5mm;
+          padding: 1mm;
           font-family: Arial, sans-serif;
+          width: 80mm;
         }
         .barcodes-container {
           display: grid;
-          grid-template-columns: repeat(${columns}, 35mm);
-          gap: 3mm;
-          justify-content: start;
+          grid-template-columns: repeat(2, 38mm);
+          gap: 2mm;
+          justify-content: center;
           width: 100%;
         }
         .barcode-item {
-          width: 35mm;
-          height: 30mm;
+          width: 38mm;
+          height: 25mm;
           text-align: center;
           padding: 1mm;
-          border: 1px solid #ddd;
           page-break-inside: avoid;
           break-inside: avoid;
           display: flex;
@@ -581,12 +568,12 @@ const printBarcode = () => {
           background: white;
         }
         .barcode-item svg {
-          max-width: 32mm;
+          max-width: 36mm;
           max-height: 12mm;
         }
         .barcode-item p {
           margin: 0;
-          line-height: 1.2;
+          line-height: 1.1;
         }
         .product-name {
           font-size: 7px;
@@ -594,8 +581,8 @@ const printBarcode = () => {
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          max-width: 32mm;
-          margin-top: 1mm;
+          max-width: 36mm;
+          margin-top: 0.5mm;
         }
         .barcode-number {
           font-size: 7px;
@@ -610,13 +597,11 @@ const printBarcode = () => {
         @media print {
           body {
             margin: 0;
-            padding: 5mm;
+            padding: 1mm;
+            width: 80mm;
           }
           .barcodes-container {
             gap: 2mm;
-          }
-          .barcode-item {
-            border: 1px solid #ccc;
           }
         }
       </style>
@@ -632,8 +617,8 @@ const printBarcode = () => {
             try {
               JsBarcode("#printBarcode" + i, "${props.product?.barcode || ""}", {
                 format: "CODE128",
-                width: 1.7,
-                height: 45,
+                width: 1.5,
+                height: 40,
                 displayValue: false,
                 margin: 0
               });
@@ -663,7 +648,7 @@ watch(
     if (newVal) {
       generateBarcode();
       barcodeQuantity.value = 1; // Reset quantity when modal opens
-      columnsPerRow.value = 1; // Reset columns to default
+      columnsPerRow.value = 2; // Fixed 2-column layout for 80mm paper
     }
   }
 );

@@ -40,6 +40,12 @@ class UserSeeder extends Seeder
             ['name' => 'Sports Cashier', 'password' => bcrypt($pass), 'role' => 2, 'division_id' => 2]
         );
 
+        // Both Divisions Cashier - access to all divisions
+        User::firstOrCreate(
+            ['email' => 'cashier@gmail.com'],
+            ['name' => 'Cashier', 'password' => bcrypt($pass), 'role' => 2, 'division_id' => null]
+        );
+
 
     }
 }

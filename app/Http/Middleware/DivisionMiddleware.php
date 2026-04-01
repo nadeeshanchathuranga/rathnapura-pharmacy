@@ -23,8 +23,8 @@ class DivisionMiddleware
             return redirect()->route('login');
         }
 
-        // Admin bypasses all division checks
-        if ($user->isAdmin()) {
+        // Admin and users with no division assigned bypass division checks (access all divisions)
+        if ($user->isAdmin() || is_null($user->division_id)) {
             return $next($request);
         }
 
