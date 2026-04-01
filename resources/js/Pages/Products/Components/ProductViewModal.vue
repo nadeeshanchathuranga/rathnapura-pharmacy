@@ -541,20 +541,21 @@ const printBarcode = () => {
         }
         @page {
           size: 80mm auto;
-          margin: 1mm;
+          margin: 0;
         }
         body {
           margin: 0;
-          padding: 1mm;
+          padding: 0;
           font-family: Arial, sans-serif;
           width: 80mm;
         }
         .barcodes-container {
           display: grid;
           grid-template-columns: repeat(2, 38mm);
-          gap: 2mm;
+          column-gap: 2mm;
+          row-gap: 1mm;
           justify-content: center;
-          width: 100%;
+          width: 80mm;
         }
         .barcode-item {
           width: 38mm;
@@ -572,7 +573,7 @@ const printBarcode = () => {
         }
         .barcode-item svg {
           max-width: 34mm;
-          max-height: 9mm;
+          max-height: 7mm;
         }
         .barcode-item p {
           margin: 0;
@@ -600,11 +601,8 @@ const printBarcode = () => {
         @media print {
           body {
             margin: 0;
-            padding: 1mm;
+            padding: 0;
             width: 80mm;
-          }
-          .barcodes-container {
-            gap: 2mm;
           }
         }
       </style>
@@ -620,8 +618,8 @@ const printBarcode = () => {
             try {
               JsBarcode("#printBarcode" + i, "${props.product?.barcode || ""}", {
                 format: "CODE128",
-                width: 1,
-                height: 25,
+                width: 0.8,
+                height: 18,
                 displayValue: false,
                 margin: 0
               });
