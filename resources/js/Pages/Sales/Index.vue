@@ -1117,6 +1117,7 @@
         </div>
         <hr class="my-2 border-black" />
         <div class="mb-2 text-sm">
+          <p v-if="!hideVatNumber"><strong>VAT No:</strong> 933686833-7000</p>
           <p><strong>Customer:</strong> {{ completedCustomer }}</p>
           <p><strong>Payment:</strong> {{ getPaymentTypeText(completedPaymentType, completedCardType) }}</p>
           <p v-if="bill.address">{{ bill.address }}</p>
@@ -1338,6 +1339,23 @@ const billWidth = computed(() => {
   return allowed.includes(raw) ? raw : "80mm";
 });
 
+const getProductDivisionId = (productId) => {
+  return props.products.find((product) => product.id === productId)?.division_id ?? null;
+};
+
+const hideVatNumber = computed(() => {
+  const items = completedItems.value || [];
+
+  if (items.length === 0) {
+    return false;
+  }
+
+  return items.every((item) => {
+    const divisionId = Number(item.division_id ?? getProductDivisionId(item.product_id));
+    return divisionId === 1;
+  });
+});
+
 // Product modal filters and pagination
 const productFilters = ref({
   search: "",
@@ -1491,6 +1509,7 @@ const addByBarcode = () => {
       form.items.push({
         product_id: product.id,
         product_name: product.name,
+        division_id: product.division_id ?? null,
         price: parseFloat(price),
         quantity: 1,
         sale_unit: product.salesUnit ? product.salesUnit.name : 'Not found',
@@ -1533,6 +1552,7 @@ const addToCart = (product) => {
     form.items.push({
       product_id: product.id,
       product_name: product.name,
+      division_id: product.division_id ?? null,
       price: parseFloat(price),
       quantity: productQuantities.value[product.id] || 1,
       sale_unit: product.salesUnit ? product.salesUnit.name : 'Not found',
@@ -1795,6 +1815,7 @@ const selectProductFromModal = async (product) => {
     form.items.push({
       product_id: product.id,
       product_name: product.name,
+      division_id: product.division_id ?? null,
       price: parseFloat(price),
       quantity: quantity,
       discount: product.discount
@@ -1901,7 +1922,10 @@ const submitSale = (paidStatus = 1) => {
     amount: parseFloat(payment.amount) || 0,
     card_type: payment.card_type || null,
   }));
-  completedItems.value = [...form.items];
+  completedItems.value = form.items.map((item) => ({
+    ...item,
+    division_id: item.division_id ?? getProductDivisionId(item.product_id),
+  }));
   completedTotal.value = (originalTotal.value||0).toFixed(2);
   completedProductDiscount.value = (totalProductDiscount.value||0).toFixed(2);
   completedDiscount.value = (Number(form.discount) || 0).toFixed(2);
@@ -2033,6 +2057,7 @@ const loadUnpaidSale = async (sale) => {
     form.items = (data.items || []).map((item) => ({
       product_id: item.product_id,
       product_name: item.product_name,
+      division_id: item.division_id ?? getProductDivisionId(item.product_id),
       price: parseFloat(item.price || 0),
       quantity: parseFloat(item.quantity || 1),
       sale_unit: item.sale_unit || "Not found",
@@ -2081,6 +2106,9 @@ const printReceipt = () => {
   const currency = page.props.currency || "Rs.";
   const paymentStatusLabel = completedPaidStatus.value === 0 ? "Unpaid" : "Paid";
   const paymentDetailsList = completedPayments.value || [];
+  const vatNumberHtml = hideVatNumber.value
+    ? "<div class=\"left\" style=\"visibility:hidden\">VAT No:<br>933686833-7000</div>"
+    : "<div class=\"left\">VAT No:<br>933686833-7000</div>";
   const paymentDetailsHtml = paymentDetailsList.length
     ? paymentDetailsList
         .map(
@@ -2279,7 +2307,7 @@ const printReceipt = () => {
         <body>
             <div class="receipt-container">
                 <div class="meta-top">
-                  <div class="left">VAT No:<br>933686833-7000</div>
+                  ${vatNumberHtml}
                   <div class="right">
 
 ESTD:1926
