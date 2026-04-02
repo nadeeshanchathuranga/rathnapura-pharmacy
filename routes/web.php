@@ -229,17 +229,24 @@ Route::middleware(['auth', 'role:0,1,3,4'])->group(function () {
 });
 /*
 |--------------------------------------------------------------------------
-| Admin, Manager & Cashier Routes (user_type: 0,1,2)
+| Sales Management Routes (All Except Backoffice role: 1)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:0,1,2'])->group(function () {
+Route::middleware(['auth', 'role:0,2,3,4'])->group(function () {
     // Sales Management
     Route::get('/sales/unpaid-list', [SaleController::class, 'unpaidList'])->name('sales.unpaid-list');
     Route::get('/sales/{sale}/unpaid-details', [SaleController::class, 'unpaidDetails'])->name('sales.unpaid-details');
     Route::patch('/sales/{sale}/mark-paid', [SaleController::class, 'markAsPaid'])->name('sales.mark-paid');
     Route::patch('/sales/{sale}/complete-unpaid', [SaleController::class, 'completeUnpaid'])->name('sales.complete-unpaid');
     Route::resource('sales', SaleController::class, ['only' => ['index', 'store', 'update', 'destroy']]);
+});
 
+/*
+|--------------------------------------------------------------------------
+| Admin, Manager & Cashier Routes (user_type: 0,1,2)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:0,1,2'])->group(function () {
     // Shift Management
     Route::get('/shift-management', [ShiftController::class, 'index'])->name('shift-management.index');
     Route::get('/shift-management/end-page', [ShiftController::class, 'endPage'])->name('shift-management.end-page');
