@@ -1356,6 +1356,39 @@ const hideVatNumber = computed(() => {
   });
 });
 
+const getDivisionMetaForItems = (items = []) => {
+  const divisionIds = [
+    ...new Set(
+      (items || [])
+        .map((item) => Number(item.division_id ?? getProductDivisionId(item.product_id)))
+        .filter((divisionId) => Number.isFinite(divisionId) && divisionId > 0)
+    ),
+  ];
+
+  if (divisionIds.length !== 1) {
+    return { name: null, slug: null };
+  }
+
+  const divisionId = divisionIds[0];
+
+  if (divisionId === 1) {
+    return { name: 'Pharmacy', slug: 'pharmacy' };
+  }
+
+  if (divisionId === 2) {
+    return { name: 'Sports', slug: 'sports' };
+  }
+
+  const matchedProduct = (items || []).find((item) => {
+    return Number(item.division_id ?? getProductDivisionId(item.product_id)) === divisionId;
+  });
+
+  return {
+    name: matchedProduct?.division_name || null,
+    slug: matchedProduct?.division_slug || null,
+  };
+};
+
 // Product modal filters and pagination
 const productFilters = ref({
   search: "",
@@ -2093,11 +2126,12 @@ const printReceipt = () => {
   const width = rawSize.includes("58") ? "58mm" : "80mm";
   const authUser = page.props.auth?.user;
   const userDivision = authUser?.division;
-  const divisionName = userDivision?.name || null;
-  // Department subtitle: show division dept if cashier, otherwise nothing
+  const saleDivision = getDivisionMetaForItems(completedItems.value || []);
+  const divisionName = saleDivision.name || userDivision?.name || null;
+  // Department subtitle follows the sold items when the sale belongs to a single division.
   const deptSubtitle = divisionName ? `${divisionName} Department` : '';
-  // Footer note varies by division slug
-  const divisionSlug = userDivision?.slug || '';
+  // Footer note follows the sold items when possible, otherwise falls back to cashier division.
+  const divisionSlug = saleDivision.slug || userDivision?.slug || '';
   const divisionFooter = divisionSlug === 'sports'
     ? 'සැ:යු: භාණ්ඩ අලෙවි කිරීමෙන් පසු නැවත මාරු කිරීමක් හෝ නැවත මුදල් ලබා දීමක් සිදුනොවන බව කාරුණිකව දන්වමි.'
     : (divisionSlug === 'pharmacy'
