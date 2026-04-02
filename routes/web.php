@@ -222,12 +222,11 @@ Route::middleware(['auth', 'role:0,3,4'])->group(function () {
     Route::post('/product-release-notes', [PurchaseRequestNoteController::class, 'store'])->name('product-release-notes.store');                  // Create new PRN
     Route::put('/product-release-notes/{productReleaseNote}', [PurchaseRequestNoteController::class, 'update'])->name('product-release-notes.update');           // Update PRN
     Route::delete('/product-release-notes/{productReleaseNote}', [PurchaseRequestNoteController::class, 'destroy'])->name('product-release-notes.destroy');      // Delete PRN
-
-
-
 });
 
-
+Route::middleware(['auth', 'role:0,1,3,4'])->group(function () {
+    Route::resource('suppliers', SupplierController::class, ['only' => ['index', 'store', 'update', 'destroy']]);
+});
 /*
 |--------------------------------------------------------------------------
 | Admin, Manager & Cashier Routes (user_type: 0,1,2)
@@ -444,7 +443,7 @@ Route::middleware(['auth', 'role:0,1,2,3'])->group(function () {
 | Sales Income Report Routes (Order History) - Admin, Manager & Cashier (user_type: 0,1,2)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:0,2'])->group(function () {
+Route::middleware(['auth', 'role:0'])->group(function () {
     Route::prefix('reports')->name('reports.')->group(function () {
         // Order History Report - Sales income and returns transactions
         Route::get('/sales-income', [ReportController::class, 'salesIncomeReport'])->name('sales-income');
