@@ -136,18 +136,20 @@
                 <!-- Division -->
                 <div>
                   <label class="block mb-2 text-sm font-medium text-gray-700">
-                    Division <span class="text-red-500">*</span>
+                    Division
                   </label>
                   <select
                     v-model="form.division_id"
                     class="w-full px-4 py-2 text-gray-800 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
                   >
                     <option value="">-- Select Division --</option>
                     <option v-for="division in divisions" :key="division.id" :value="division.id">
                       {{ division.name }}
                     </option>
                   </select>
+                  <span v-if="errors.division_id" class="text-sm text-red-500">{{
+                    errors.division_id
+                  }}</span>
                 </div>
               </div>
             </div>
@@ -169,7 +171,6 @@
                     v-model.number="form.purchase_price"
                     type="number"
                     step="0.01"
-                    required
                     class="w-full px-4 py-2 text-gray-800 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="0.00"
                     readonly
@@ -813,12 +814,62 @@ const handleSubmit = () => {
   processing.value = true;
   errors.value = {};
 
+  const payload = {
+    name: form.value.name,
+    barcode: form.value.barcode || null,
+    brand_id: form.value.brand_id || null,
+    category_id: form.value.category_id || null,
+    type_id: form.value.type_id || null,
+    discount_id: form.value.discount_id || null,
+    tax_id: form.value.tax_id || null,
+    purchase_price:
+      form.value.purchase_price === "" || form.value.purchase_price === null
+        ? null
+        : Number.parseFloat(form.value.purchase_price),
+    wholesale_price:
+      form.value.wholesale_price === "" || form.value.wholesale_price === null
+        ? null
+        : Number.parseFloat(form.value.wholesale_price),
+    retail_price:
+      form.value.retail_price === "" || form.value.retail_price === null
+        ? null
+        : Number.parseFloat(form.value.retail_price),
+    return_product: !!form.value.return_product,
+    purchase_unit_id: form.value.purchase_unit_id || null,
+    sales_unit_id: form.value.sales_unit_id || null,
+    transfer_unit_id: form.value.transfer_unit_id || null,
+    purchase_to_transfer_rate:
+      form.value.purchase_to_transfer_rate === "" ||
+      form.value.purchase_to_transfer_rate === null
+        ? null
+        : Number.parseFloat(form.value.purchase_to_transfer_rate),
+    transfer_to_sales_rate:
+      form.value.transfer_to_sales_rate === "" ||
+      form.value.transfer_to_sales_rate === null
+        ? null
+        : Number.parseFloat(form.value.transfer_to_sales_rate),
+    store_low_stock_margin:
+      form.value.store_low_stock_margin === "" ||
+      form.value.store_low_stock_margin === null
+        ? null
+        : Number.parseFloat(form.value.store_low_stock_margin),
+    shop_low_stock_margin:
+      form.value.shop_low_stock_margin === "" ||
+      form.value.shop_low_stock_margin === null
+        ? null
+        : Number.parseFloat(form.value.shop_low_stock_margin),
+    status: form.value.status,
+    division_id: form.value.division_id || null,
+    _method: "PUT",
+  };
+
+  if (form.value.image instanceof File) {
+    payload.image = form.value.image;
+  }
+
   router.post(
     route("products.update", props.product.id),
-    {
-      ...form.value,
-      _method: "PUT",
-    },
+    payload,
     {
       preserveScroll: true,
       forceFormData: true,

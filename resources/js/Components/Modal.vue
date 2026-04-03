@@ -20,21 +20,33 @@ const emit = defineEmits(['close']);
 const dialog = ref();
 const showSlot = ref(props.show);
 
+const openDialog = () => {
+    document.body.style.overflow = 'hidden';
+    showSlot.value = true;
+
+    if (dialog.value && !dialog.value.open) {
+        dialog.value.showModal();
+    }
+};
+
+const closeDialog = () => {
+    document.body.style.overflow = '';
+
+    setTimeout(() => {
+        if (dialog.value?.open) {
+            dialog.value.close();
+        }
+        showSlot.value = false;
+    }, 200);
+};
+
 watch(
     () => props.show,
     () => {
         if (props.show) {
-            document.body.style.overflow = 'hidden';
-            showSlot.value = true;
-
-            dialog.value?.showModal();
+            openDialog();
         } else {
-            document.body.style.overflow = '';
-
-            setTimeout(() => {
-                dialog.value?.close();
-                showSlot.value = false;
-            }, 200);
+            closeDialog();
         }
     },
 );
@@ -61,8 +73,14 @@ const closeOnGlobalRequest = () => {
     }
 };
 
-onMounted(() => document.addEventListener('keydown', closeOnEscape));
-onMounted(() => document.addEventListener('app:close-top-dialog', closeOnGlobalRequest));
+onMounted(() => {
+    document.addEventListener('keydown', closeOnEscape);
+    document.addEventListener('app:close-top-dialog', closeOnGlobalRequest);
+
+    if (props.show) {
+        openDialog();
+    }
+});
 
 onUnmounted(() => {
     document.removeEventListener('keydown', closeOnEscape);

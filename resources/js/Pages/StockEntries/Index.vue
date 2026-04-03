@@ -11,6 +11,15 @@ const props = defineProps({
     entryNumber: String,
 });
 
+const page = usePage();
+const currentUserRole = computed(() => Number(page.props.auth?.user?.role ?? -1));
+const currentUserDivisionId = computed(() => {
+    const divisionId = page.props.auth?.user?.division_id;
+    return divisionId ? String(divisionId) : "";
+});
+const divisions = computed(() => page.props.divisions ?? []);
+const canChooseDivision = computed(() => [0, 1].includes(currentUserRole.value));
+
 // --- Form state ---
 const showForm = ref(false);
 const submitting = ref(false);
@@ -43,6 +52,10 @@ const filteredProducts = computed(() => {
 
 const canCreateNew = computed(() => form.value.entry_type === 'addition' && searchQuery.value.trim().length >= 2);
 
+function getDefaultDivisionId() {
+    return currentUserDivisionId.value;
+}
+
 function selectProduct(product) {
     if (form.value.products.find((p) => !p.isNew && p.product_id === product.id)) {
         showDropdown.value = false;
@@ -71,6 +84,7 @@ function addNewProduct() {
         new_name: name,
         new_barcode: "",
         new_category_id: "",
+        new_division_id: getDefaultDivisionId(),
         new_retail_price: "",
         quantity: "",
         purchase_price: "",
@@ -101,6 +115,7 @@ function submit() {
                       new_name: p.new_name,
                       new_barcode: p.new_barcode || null,
                       new_category_id: p.new_category_id || null,
+                      new_division_id: p.new_division_id || null,
                       new_retail_price: p.new_retail_price || null,
                       purchase_price: p.purchase_price || null,
                       quantity: p.quantity,
@@ -330,7 +345,7 @@ function formatDate(d) {
                                             placeholder="Product name *"
                                             class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm mb-1.5 focus:ring-2 focus:ring-green-400 focus:outline-none"
                                         />
-                                        <div class="flex gap-2">
+                                        <div class="grid grid-cols-1 gap-2 md:grid-cols-3">
                                             <input
                                                 v-model="line.new_barcode"
                                                 type="text"
@@ -344,7 +359,20 @@ function formatDate(d) {
                                                 <option value="">Category</option>
                                                 <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
                                             </select>
+                                            <select
+                                                v-model="line.new_division_id"
+                                                :disabled="!canChooseDivision && !!currentUserDivisionId"
+                                                class="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:ring-1 focus:ring-gray-400 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
+                                            >
+                                                <option value="">Division *</option>
+                                                <option v-for="division in divisions" :key="division.id" :value="String(division.id)">
+                                                    {{ division.name }}
+                                                </option>
+                                            </select>
                                         </div>
+                                        <p v-if="errors['products.' + i + '.new_division_id']" class="text-xs text-red-600 mt-1">
+                                            {{ errors['products.' + i + '.new_division_id'] }}
+                                        </p>
                                     </template>
                                     <template v-else>
                                         <span class="font-medium text-gray-800">{{ line.name }}</span>

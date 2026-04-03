@@ -12,6 +12,7 @@ use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class StockEntryController extends Controller
@@ -54,10 +55,13 @@ class StockEntryController extends Controller
             'products.*.new_name'           => 'nullable|string|max:255',
             'products.*.new_barcode'        => 'nullable|string|max:100',
             'products.*.new_category_id'    => 'nullable|exists:categories,id',
+            'products.*.new_division_id'    => 'nullable|exists:divisions,id',
             'products.*.new_retail_price'   => 'nullable|numeric|min:0',
             'products.*.purchase_price'     => 'nullable|numeric|min:0',
             'products.*.quantity'           => 'required|numeric|min:0.01',
         ]);
+
+        $user = Auth::user();
 
         DB::beginTransaction();
         try {
@@ -70,7 +74,7 @@ class StockEntryController extends Controller
                 'remarks'      => $validated['remarks'] ?? null,
             ]);
 
-            foreach ($validated['products'] as $line) {
+            foreach ($validated['products'] as $index => $line) {
                 $isNew = (bool) ($line['is_new'] ?? false);
 
                 if ($entry->entry_type === 'deduction') {
@@ -112,6 +116,22 @@ class StockEntryController extends Controller
                     if (empty($line['new_name'])) {
                         throw new \Exception('Product name is required for new products.');
                     }
+
+                    $divisionId = $line['new_division_id'] ?? null;
+                    if (empty($divisionId)) {
+                        throw ValidationException::withMessages([
+                            "products.{$index}.new_division_id" => 'Division is required for new products.',
+                        ]);
+                    }
+
+                    if ($user && method_exists($user, 'hasDivision') && $user->hasDivision() && !$user->isAdmin() && !$user->isBackoffice()) {
+                        if ((int) $divisionId !== (int) $user->division_id) {
+                            throw ValidationException::withMessages([
+                                "products.{$index}.new_division_id" => 'You can only create products in your assigned division.',
+                            ]);
+                        }
+                    }
+
                     $barcode = !empty($line['new_barcode']) ? trim($line['new_barcode']) : null;
                     if (!$barcode) {
                         $barcode = $this->generateBarcode();
@@ -123,6 +143,7 @@ class StockEntryController extends Controller
                         'category_id'                 => $line['new_category_id'] ?? null,
                         'purchase_price'              => !empty($line['purchase_price']) ? (float) $line['purchase_price'] : null,
                         'retail_price'                => !empty($line['new_retail_price']) ? (float) $line['new_retail_price'] : null,
+                        'division_id'                 => (int) $divisionId,
                         'shop_quantity_in_sales_unit' => 0,
                         'status'                      => 1,
                         'purchase_to_transfer_rate'   => 1,
