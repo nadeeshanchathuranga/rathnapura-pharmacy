@@ -45,7 +45,10 @@ class UserSeeder extends Seeder
             ['email' => 'cashier@gmail.com'],
             ['name' => 'Cashier', 'password' => bcrypt($pass), 'role' => 2, 'division_id' => null]
         );
-
+        User::firstOrCreate(
+            ['email' => 'tokencashier@gmail.com'],
+            ['name' => 'Token Cashier', 'password' => bcrypt($pass), 'role' => 3, 'division_id' => null]
+        );
 
     }
 }

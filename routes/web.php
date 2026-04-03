@@ -197,7 +197,7 @@ Route::middleware(['auth', 'role:0,1,3'])->group(function () {
     Route::post('/products/pricing-by-batch', [ProductController::class, 'getPricingInfoByBatch'])->name('products.pricing-by-batch');
     Route::post('products/{product}/duplicate', [ProductController::class, 'duplicate'])->name('products.duplicate');
     Route::post('products/log-activity', [ProductController::class, 'logActivity'])->name('products.log-activity');
-    
+
     // Product resource routes
     Route::resource('products', ProductController::class, ['only' => ['index', 'store', 'update', 'destroy']]);
     Route::resource('categories', CategoryController::class, ['only' => ['index', 'store', 'update', 'destroy']]);
@@ -238,6 +238,8 @@ Route::middleware(['auth', 'role:0,2,3,4'])->group(function () {
     Route::get('/sales/{sale}/unpaid-details', [SaleController::class, 'unpaidDetails'])->name('sales.unpaid-details');
     Route::patch('/sales/{sale}/mark-paid', [SaleController::class, 'markAsPaid'])->name('sales.mark-paid');
     Route::patch('/sales/{sale}/complete-unpaid', [SaleController::class, 'completeUnpaid'])->name('sales.complete-unpaid');
+    Route::post('/sales/pre-billing-tokens', [SaleController::class, 'createPreBillingToken'])->name('sales.pre-billing-tokens.store');
+    Route::get('/sales/pre-billing-tokens/{tokenId}', [SaleController::class, 'getPreBillingToken'])->name('sales.pre-billing-tokens.show');
     Route::resource('sales', SaleController::class, ['only' => ['index', 'store', 'update', 'destroy']]);
 });
 
@@ -455,7 +457,7 @@ Route::middleware(['auth', 'role:0'])->group(function () {
         // Order History Report - Sales income and returns transactions
         Route::get('/sales-income', [ReportController::class, 'salesIncomeReport'])->name('sales-income');
         Route::get('/sales-income/totals', [ReportController::class, 'salesIncomeTotals'])->name('sales-income.totals');
-        
+
         // Export Routes
         Route::get('/export/sales-income/pdf', [ReportController::class, 'exportSalesIncomePdf'])->name('export.sales-income.pdf');
         Route::get('/export/sales-income/excel', [ReportController::class, 'exportSalesIncomeExcel'])->name('export.sales-income.excel');
