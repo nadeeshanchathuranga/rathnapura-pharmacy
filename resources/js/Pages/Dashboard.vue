@@ -10,6 +10,8 @@ import { Head, Link, usePage, router } from "@inertiajs/vue3";
 import { computed, ref, onMounted } from "vue";
 
 const page = usePage();
+const userRole = computed(() => Number(page.props.auth?.user?.role ?? -1));
+const isRole3 = computed(() => userRole.value === 3);
 const pageTitle = computed(() => {
   const appName = page.props.appSettings?.app_name || "POS";
   return appName;
@@ -17,8 +19,11 @@ const pageTitle = computed(() => {
 
 // Set default tab based on user role
 const getDefaultTab = () => {
-  const userRole = page.props.auth.user.role;
-  if ([0, 1, 3].includes(userRole)) {
+  if (isRole3.value) {
+    return "shops";
+  }
+
+  if ([0, 1, 3].includes(userRole.value)) {
     return "products"; // Products section for these roles
   }
   return "shops"; // Default to shops for other roles
@@ -34,6 +39,13 @@ const setActiveTab = (tab) => {
 
 // Set default tab on mount
 onMounted(() => {
+  if (isRole3.value) {
+    activeTab.value = "shops";
+    localStorage.removeItem("activeTab");
+    sessionStorage.removeItem("fromNavigation");
+    return;
+  }
+
   const savedTab = localStorage.getItem("activeTab");
   const fromNavigation = sessionStorage.getItem("fromNavigation");
 
@@ -60,7 +72,7 @@ onMounted(() => {
       </div>
 
       <!-- Tab Navigation -->
-      <div class="mb-8 flex justify-center">
+      <div v-if="!isRole3" class="mb-8 flex justify-center">
         <div class="inline-flex gap-2 bg-white rounded-lg p-2 border border-gray-200">
 
           <button
@@ -311,7 +323,7 @@ onMounted(() => {
 
       <!-- Shops Section -->
       <div
-        v-if="activeTab === 'shops'"
+        v-if="activeTab === 'shops' || isRole3"
         class="bg-white rounded-lg p-6 border border-gray-200"
       >
         <h3
@@ -351,7 +363,7 @@ onMounted(() => {
           </Link>
 
           <Link
-            v-if="[0, 1, 2].includes($page.props.auth.user.role)"
+            v-if="[0, 1, 2, 3].includes($page.props.auth.user.role)"
             :href="route('sales.index')"
             class="group bg-white hover:bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200"
           >

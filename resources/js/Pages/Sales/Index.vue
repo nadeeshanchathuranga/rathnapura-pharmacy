@@ -20,7 +20,7 @@
               Create new invoice (F2: Focus Barcode | F4: Cash | F9: Card | F8: Clear | F12: Sales Return | ESC: Home)
             </p>
           </div>
-          <div class="flex items-center gap-3">
+          <div v-if="canAccessBillingActions" class="flex items-center gap-3">
             <button
               @click="openUnpaidModal"
               data-shortcut="F11"
@@ -249,7 +249,59 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Pre-billing Token -->
+        <div class="bg-white rounded-2xl p-4 shadow-md border border-gray-200 mb-6">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+            <div class="lg:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700 mb-2">🎫 Pre-billing Token</label>
+              <div class="flex flex-col sm:flex-row gap-2">
+                <button
+                  v-if="canGenerateToken"
+                  @click="generatePreBillingToken"
+                  type="button"
+                  :disabled="form.items.length === 0 || generatingToken"
+                  class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-[5px] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {{ generatingToken ? 'Generating...' : 'Generate Token' }}
+                </button>
+                <input
+                  v-if="canLoadTokenCart"
+                  type="text"
+                  v-model="tokenBarcodeInput"
+                  @keyup.enter="loadCartByToken"
+                  placeholder="Scan / enter token barcode"
+                  class="flex-1 px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-[5px] focus:ring-2 focus:ring-indigo-500 font-mono"
+                />
+                <button
+                  v-if="canLoadTokenCart"
+                  @click="loadCartByToken"
+                  type="button"
+                  :disabled="loadingTokenCart"
+                  class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-[5px] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {{ loadingTokenCart ? 'Loading...' : 'Load Token Cart' }}
+                </button>
+                <button
+                  v-if="canPrintToken"
+                  @click="printPreBillingToken"
+                  type="button"
+                  :disabled="!preBillingTokenId"
+                  class="px-4 py-2.5 bg-slate-700 hover:bg-slate-800 text-white font-semibold rounded-[5px] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Print Token
+                </button>
+              </div>
+              <p v-if="preBillingTokenId" class="mt-2 text-xs text-gray-600">
+                Active token: <span class="font-mono font-semibold">{{ preBillingTokenId }}</span>
+              </p>
+            </div>
+            <div v-if="canSeeTokenBarcode" class="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-3 min-h-[96px] flex items-center justify-center">
+              <svg ref="tokenBarcodeSvg"></svg>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="showNormalPosUI" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Left Side - Cart -->
           <div class="lg:col-span-2 space-y-6">
             <!-- Cart Items -->
@@ -531,7 +583,7 @@
               </div>
 
               <!-- Payment Buttons -->
-              <div class="mt-6 grid grid-cols-2 gap-3">
+              <div v-if="canAccessBillingActions" class="mt-6 grid grid-cols-2 gap-3">
                 <button
                   @click="openPaymentModalForMethod(0)"
                   data-shortcut="F4"
@@ -551,7 +603,7 @@
               </div>
 
               <!-- Submit Buttons: Paid / Unpaid -->
-              <div class="mt-3 grid grid-cols-2 gap-3">
+              <div v-if="canAccessBillingActions" class="mt-3 grid grid-cols-2 gap-3">
                 <button
                   @click="submitSale(1)"
                   data-shortcut="F3"
@@ -575,7 +627,8 @@
               <!-- Quick Actions -->
               <div class="mt-4 text-xs text-gray-400 text-center">
                 <p>Keyboard Shortcuts:</p>
-                <p>F2: Focus Barcode | F3: Paid Sale | F4: Cash Payment | F5: Unpaid Sale | F8: Clear Cart | F9: Card Payment | F11: Unpaid Sales List | F12: Create Sales Return | ESC: Home</p>
+                <p v-if="canAccessBillingActions">F2: Focus Barcode | F3: Paid Sale | F4: Cash Payment | F5: Unpaid Sale | F8: Clear Cart | F9: Card Payment | F11: Unpaid Sales List | F12: Create Sales Return | ESC: Home</p>
+                <p v-else>F2: Focus Barcode | F8: Clear Cart | ESC: Home</p>
                 <button
                   type="button"
                   class="hidden"
@@ -1203,6 +1256,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, useForm, router, usePage } from "@inertiajs/vue3";
 import axios from "axios";
+import JsBarcode from "jsbarcode";
 const page = usePage();
 import { ref, computed, onMounted, nextTick } from "vue";
 import { logActivity } from "@/composables/useActivityLog";
@@ -1242,6 +1296,7 @@ const form = useForm({
   sale_date: new Date().toISOString().split("T")[0],
   items: [],
   discount: 0,
+  pre_billing_token_id: null,
   payment_type: 0,
   paid_amount: 0,
   payments: [], // Multiple payments
@@ -1259,6 +1314,7 @@ const selectedProduct = ref(null);
 const selectedQuantity = ref(1);
 const barcodeInput = ref("");
 const barcodeField = ref(null);
+const tokenBarcodeSvg = ref(null);
 const showSuccessModal = ref(false);
 const showPaymentModal = ref(false);
 const showUnpaidModal = ref(false);
@@ -1286,6 +1342,22 @@ const completedPaid = ref("0.00");
 const completedBalance = ref("0.00");
 const completedPaidStatus = ref(1);
 const editingUnpaidSaleId = ref(null);
+const preBillingTokenId = ref("");
+const tokenBarcodeInput = ref("");
+const generatingToken = ref(false);
+const loadingTokenCart = ref(false);
+
+const currentUserRole = computed(() => Number(page.props.auth?.user?.role ?? -1));
+const isAdminRole = computed(() => currentUserRole.value === 0);
+const isCashierRole = computed(() => currentUserRole.value === 2);
+const isTokenCashierRole = computed(() => currentUserRole.value === 3);
+
+const canGenerateToken = computed(() => isAdminRole.value || isTokenCashierRole.value);
+const canPrintToken = computed(() => isAdminRole.value || isTokenCashierRole.value);
+const canLoadTokenCart = computed(() => isAdminRole.value || isCashierRole.value);
+const canSeeTokenBarcode = computed(() => isAdminRole.value || isTokenCashierRole.value);
+const showNormalPosUI = computed(() => isAdminRole.value || isCashierRole.value || isTokenCashierRole.value);
+const canAccessBillingActions = computed(() => isAdminRole.value || isCashierRole.value);
 
 // Quotation selector
 const selectedQuotationId = ref("");
@@ -1315,6 +1387,9 @@ const loadQuotationData = () => {
   form.customer_type = quotation.customer_type || "retail";
   form.discount = quotation.discount || 0;
   form.quotation_id = quotation.id; // Store quotation ID for status update when sale completes
+  form.pre_billing_token_id = null;
+  preBillingTokenId.value = "";
+  tokenBarcodeInput.value = "";
   form.items = quotation.items.map((item) => ({
     product_id: item.product_id,
     product_name: item.product_name,
@@ -1463,7 +1538,7 @@ const change = computed(() => {
   return cashPaid > netAmount.value ? cashPaid - netAmount.value : 0;
 });
 
-const isShiftLocked = computed(() => !props.activeShift);
+const isShiftLocked = computed(() => !props.activeShift && !isTokenCashierRole.value);
 
 // Product modal pagination computed properties
 const paginatedProducts = computed(() => {
@@ -1563,6 +1638,298 @@ const addByBarcode = () => {
     barcodeInput.value = "";
     barcodeField.value?.focus();
   }
+};
+
+const renderTokenBarcode = async (tokenId) => {
+  await nextTick();
+
+  if (!tokenBarcodeSvg.value || !tokenId) return;
+
+  JsBarcode(tokenBarcodeSvg.value, tokenId, {
+    format: "CODE39",
+    displayValue: true,
+    lineColor: "#000",
+    width: 1.4,
+    height: 34,
+    margin: 0,
+    fontSize: 11,
+    textMargin: 2,
+  });
+};
+
+const createTokenBarcodeDataUrl = (tokenId) => {
+  const canvas = document.createElement("canvas");
+
+  JsBarcode(canvas, tokenId, {
+    format: "CODE39",
+    displayValue: true,
+    lineColor: "#000",
+    width: 1.5,
+    height: 52,
+    margin: 0,
+    fontSize: 12,
+    textMargin: 2,
+  });
+
+  return canvas.toDataURL("image/png");
+};
+
+const generatePreBillingToken = async () => {
+  if (!canGenerateToken.value) {
+    alert("You do not have permission to generate tokens.");
+    return;
+  }
+
+  if (isShiftLocked.value) {
+    alert("Start a shift first to unlock billing.");
+    return;
+  }
+
+  if (form.items.length === 0) {
+    alert("Please add items to cart before generating a token.");
+    return;
+  }
+
+  generatingToken.value = true;
+
+  try {
+    const response = await axios.post(route("sales.pre-billing-tokens.store"), {
+      customer_id: form.customer_id || null,
+      customer_type: form.customer_type,
+      sale_date: form.sale_date,
+      discount: Number(form.discount || 0),
+      items: form.items.map((item) => ({
+        product_id: item.product_id,
+        product_name: item.product_name,
+        quantity: Number(item.quantity || 0),
+        price: Number(item.price || 0),
+        sale_unit: item.sale_unit || "Not found",
+      })),
+    });
+
+    const tokenId = response.data?.token_id || "";
+    preBillingTokenId.value = tokenId;
+    tokenBarcodeInput.value = tokenId;
+    form.pre_billing_token_id = tokenId;
+
+    await renderTokenBarcode(tokenId);
+    alert(`Pre-billing token created: ${tokenId}`);
+  } catch (error) {
+    console.error("Failed to generate pre-billing token", error);
+    const validationError = error?.response?.data?.errors
+      ? Object.values(error.response.data.errors)?.[0]?.[0]
+      : null;
+    const backendError = error?.response?.data?.error;
+    alert(validationError || backendError || "Failed to generate pre-billing token.");
+  } finally {
+    generatingToken.value = false;
+  }
+};
+
+const loadCartByToken = async () => {
+  if (!canLoadTokenCart.value) {
+    alert("You do not have permission to load token carts.");
+    return;
+  }
+
+  const tokenId = tokenBarcodeInput.value.replace(/\*/g, "").trim();
+
+  if (!tokenId) {
+    alert("Please scan or enter a token barcode.");
+    return;
+  }
+
+  if (form.items.length > 0) {
+    if (!confirm("This will replace current cart items. Continue?")) {
+      return;
+    }
+  }
+
+  loadingTokenCart.value = true;
+
+  try {
+    const response = await axios.get(route("sales.pre-billing-tokens.show", tokenId));
+    const data = response.data || {};
+
+    form.customer_id = data.customer_id || "";
+    form.customer_type = data.customer_type || "retail";
+    form.sale_date = data.sale_date || form.sale_date;
+    form.discount = parseFloat(data.discount || 0);
+    form.items = (data.items || []).map((item) => ({
+      product_id: item.product_id,
+      product_name: item.product_name,
+      division_id: getProductDivisionId(item.product_id),
+      price: parseFloat(item.price || 0),
+      quantity: parseFloat(item.quantity || 1),
+      sale_unit: item.sale_unit || "Not found",
+      discount: null,
+      discountApplied: false,
+    }));
+
+    form.payments = [];
+    form.quotation_id = null;
+    form.pre_billing_token_id = data.token_id || tokenId;
+    editingUnpaidSaleId.value = null;
+
+    preBillingTokenId.value = data.token_id || tokenId;
+    await renderTokenBarcode(preBillingTokenId.value);
+
+    alert(`Loaded token cart: ${preBillingTokenId.value}`);
+    barcodeField.value?.focus();
+  } catch (error) {
+    console.error("Failed to load token cart", error);
+    alert(error?.response?.data?.error || "Failed to load token cart.");
+  } finally {
+    loadingTokenCart.value = false;
+  }
+};
+
+const printPreBillingToken = () => {
+  if (!canPrintToken.value) {
+    alert("You do not have permission to print tokens.");
+    return;
+  }
+
+  if (!preBillingTokenId.value) {
+    alert("Generate token first.");
+    return;
+  }
+
+  const barcodeDataUrl = createTokenBarcodeDataUrl(preBillingTokenId.value);
+  const printWindow = window.open("", "_blank", "width=340,height=520");
+
+  if (!printWindow) {
+    alert("Please allow pop-ups to print token.");
+    return;
+  }
+
+  const now = new Date();
+  const dateText = now.toLocaleDateString("en-GB");
+  const timeText = now.toLocaleTimeString("en-GB", { hour12: false });
+  const cashier = page.props.auth?.user?.name || "Cashier";
+  const total = (netAmount.value || 0).toFixed(2);
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Pre-billing Token</title>
+
+  <style>
+    @page {
+      size: 80mm auto;
+      margin: 2mm;
+
+    }
+
+    * {
+      box-sizing: border-box;
+      color: #000;
+    }
+
+    body {
+      font-family: "Courier New", monospace;
+      font-size: 12px;
+      margin: 0;
+      padding: 4px 0.1mm; /* 🔥 left/right very small */
+      font-weight: 700;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 3px;
+    }
+
+    .row.center {
+      justify-content: center;
+      text-align: center;
+    }
+
+    .line {
+      border-top: 1px dashed #000;
+      margin: 6px 0;
+    }
+
+    .total-label {
+      text-align: center;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .total {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 900;
+      margin: 4px 0;
+    }
+
+    .barcode {
+      display: block;
+      width: 75%;
+      margin: 8px auto 0;
+    }
+
+    .small {
+      font-size: 11px;
+    }
+
+    .bold {
+      font-weight: 900;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- Date & Time -->
+  <div class="row">
+    <span>On: ${dateText}</span>
+    <span>At: ${timeText}</span>
+  </div>
+
+  <!-- Cashier -->
+  <div class="row">
+    <span>Cashier: ${cashier}</span>
+  </div>
+
+  <!-- Bill No -->
+  <div class="row center bold">
+    <span>Bill No: ${form.invoice_no}</span>
+  </div>
+
+  <div class="line"></div>
+
+  <!-- Total -->
+  <div class="total-label">TOTAL</div>
+  <div class="total">${total}</div>
+
+  <div class="line"></div>
+
+  <!-- Barcode -->
+  <img class="barcode" src="${barcodeDataUrl}" alt="Token Barcode" />
+
+  <!-- Optional Footer -->
+  <div class="row center small" style="margin-top:6px;">
+    <span>Thank You!</span>
+  </div>
+
+</body>
+</html>
+`;
+
+
+  printWindow.document.write(html);
+  printWindow.document.close();
+  printWindow.focus();
+  setTimeout(() => {
+    printWindow.print();
+    printWindow.close();
+    router.visit(route("sales.index"));
+  }, 250);
 };
 
 // Add product to cart
@@ -1670,8 +2037,14 @@ const clearCart = () => {
     form.discount = 0;
     form.payments = [];
     form.quotation_id = null; // Reset quotation reference
+    form.pre_billing_token_id = null;
     editingUnpaidSaleId.value = null;
+    preBillingTokenId.value = "";
+    tokenBarcodeInput.value = "";
     form.invoice_no = props.invoice_no;
+    if (tokenBarcodeSvg.value) {
+      tokenBarcodeSvg.value.innerHTML = "";
+    }
     barcodeField.value?.focus();
   }
 };
@@ -1772,6 +2145,11 @@ const focusBarcodeField = () => {
 };
 
 const goToCreateSalesReturn = () => {
+  if (!canAccessBillingActions.value) {
+    alert("You do not have permission to create sales returns.");
+    return;
+  }
+
   router.visit(route("return.index", { open_create: 1 }));
 };
 
@@ -1916,6 +2294,11 @@ const updateCartPrices = () => {
 
 // Submit sale with multiple payments
 const submitSale = (paidStatus = 1) => {
+  if (!showNormalPosUI.value) {
+    alert("You do not have permission to complete sales.");
+    return;
+  }
+
   if (isShiftLocked.value) {
     alert("Start a shift first to unlock billing.");
     return;
@@ -2045,6 +2428,11 @@ const closeStartShiftModal = () => {
 
 // Unpaid sales modal
 const openUnpaidModal = async () => {
+  if (!canAccessBillingActions.value) {
+    alert("You do not have permission to view unpaid sales.");
+    return;
+  }
+
   showUnpaidModal.value = true;
   unpaidLoading.value = true;
   try {
@@ -2099,6 +2487,9 @@ const loadUnpaidSale = async (sale) => {
     }));
     form.payments = [];
     form.paid_status = 0;
+    form.pre_billing_token_id = null;
+    preBillingTokenId.value = "";
+    tokenBarcodeInput.value = "";
     editingUnpaidSaleId.value = data.id || sale.id;
 
     showUnpaidModal.value = false;

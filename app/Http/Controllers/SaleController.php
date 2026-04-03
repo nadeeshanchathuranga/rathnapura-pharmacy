@@ -16,6 +16,7 @@ use App\Models\Discount;
 use App\Models\Quotation;
 use App\Models\Shift;
 use App\Models\User;
+use App\Models\PreBillingToken;
 use App\Models\ProductAvailableQuantity;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -25,6 +26,15 @@ use Illuminate\Validation\Rule;
 
 class SaleController extends Controller
 {
+    private function generatePreBillingTokenId(): string
+    {
+        do {
+            $tokenId = str_pad((string) random_int(0, 9999999), 7, '0', STR_PAD_LEFT);
+        } while (PreBillingToken::where('token_id', $tokenId)->exists());
+
+        return $tokenId;
+    }
+
     private function convertSalesToPurchaseUnits(Product $product, float $salesQuantity): float
     {
         $purchaseToTransferRate = (float) ($product->purchase_to_transfer_rate ?? 1);
@@ -36,6 +46,21 @@ class SaleController extends Controller
         }
 
         return $salesQuantity / $purchaseToSalesRate;
+    }
+
+    private function consumePreBillingToken(?string $tokenId, User $user): void
+    {
+        if (empty($tokenId)) {
+            return;
+        }
+
+        $query = PreBillingToken::where('token_id', $tokenId);
+
+        if ((int) ($user->getAttribute('role') ?? -1) === 2 && $user->division_id) {
+            $query->where('division_id', $user->division_id);
+        }
+
+        $query->delete();
     }
 
     private function deductGrnBatchesFifo(int $productId, float $salesQuantity): void
@@ -246,6 +271,7 @@ class SaleController extends Controller
             'items.*.quantity' => 'required|numeric|min:1',
             'items.*.price' => 'required|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
+            'pre_billing_token_id' => 'nullable|string',
             'payments' => 'nullable|array',
             'payments.*.payment_type' => 'required|in:0,1,2',
             'payments.*.amount' => 'required|numeric|min:0',
@@ -332,21 +358,21 @@ class SaleController extends Controller
             // Proportionally distribute discount across all line items based on their subtotal
             foreach ($request->items as $item) {
                 $lineTotal = $item['price'] * $item['quantity'];
-                
+
                 // Calculate proportional discount for this line item
                 // Formula: (line_total / total_amount) * total_discount
-                $lineDiscountAmount = $totalAmount > 0 
-                    ? ($lineTotal / $totalAmount) * $discount 
+                $lineDiscountAmount = $totalAmount > 0
+                    ? ($lineTotal / $totalAmount) * $discount
                     : 0;
-                
+
                 // Net amount after discount for this line
                 $lineNetAmount = $lineTotal - $lineDiscountAmount;
-                
+
                 // Calculate discounted unit price (actual price customer pays per unit)
-                $discountedUnitPrice = $item['quantity'] > 0 
+                $discountedUnitPrice = $item['quantity'] > 0
                     ? $lineNetAmount / $item['quantity']
                     : $item['price'];
-                
+
                 SalesProduct::create([
                     'sale_id' => $sale->id,
                     'product_id' => $item['product_id'],
@@ -397,6 +423,8 @@ class SaleController extends Controller
             if ($request->has('quotation_id') && $request->quotation_id) {
                 \App\Models\Quotation::where('id', $request->quotation_id)->update(['status' => 0]);
             }
+
+            $this->consumePreBillingToken($request->pre_billing_token_id, $user);
 
             DB::commit();
 
@@ -471,6 +499,7 @@ class SaleController extends Controller
             'items.*.quantity' => 'required|numeric|min:1',
             'items.*.price' => 'required|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
+            'pre_billing_token_id' => 'nullable|string',
             'payments' => 'nullable|array',
             'payments.*.payment_type' => 'required|in:0,1,2',
             'payments.*.amount' => 'required|numeric|min:0',
@@ -622,6 +651,8 @@ class SaleController extends Controller
                 ]
             );
 
+            $this->consumePreBillingToken($request->pre_billing_token_id, $user);
+
             DB::commit();
 
             return redirect()->route('sales.index')
@@ -654,6 +685,113 @@ class SaleController extends Controller
         $sale->update(['paid_status' => 1]);
 
         return response()->json(['success' => true, 'sale_id' => $sale->id]);
+    }
+
+    /**
+     * Save the active cart as a pre-billing token snapshot.
+     */
+    public function createPreBillingToken(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user instanceof User) {
+            abort(401);
+        }
+
+        try {
+            $request->validate([
+                'customer_id' => 'nullable|exists:customers,id',
+                'customer_type' => 'required|in:retail,wholesale',
+                'sale_date' => 'nullable|date',
+                'discount' => 'nullable|numeric|min:0',
+                'items' => 'required|array|min:1',
+                'items.*.product_id' => 'required|integer|min:1',
+                'items.*.product_name' => 'nullable|string',
+                'items.*.quantity' => 'required|numeric|min:1',
+                'items.*.price' => 'required|numeric|min:0',
+                'items.*.sale_unit' => 'nullable|string',
+            ]);
+
+            $items = collect($request->items)->map(function ($item) {
+                return [
+                    'product_id' => (int) $item['product_id'],
+                    'product_name' => $item['product_name'] ?? null,
+                    'quantity' => (float) ($item['quantity'] ?? 0),
+                    'price' => (float) ($item['price'] ?? 0),
+                    'sale_unit' => $item['sale_unit'] ?? null,
+                ];
+            })->values()->all();
+
+            $token = PreBillingToken::create([
+                'token_id' => $this->generatePreBillingTokenId(),
+                'user_id' => $user->id,
+                'division_id' => $user->division_id,
+                'customer_id' => $request->customer_id ?: null,
+                'customer_type' => $request->customer_type,
+                'sale_date' => $request->sale_date,
+                'discount' => (float) ($request->discount ?? 0),
+                'items' => $items,
+                'expires_at' => now()->addHours(24),
+            ]);
+
+            return response()->json([
+                'token_id' => $token->token_id,
+                'barcode_value' => $token->token_id,
+                'expires_at' => optional($token->expires_at)->toDateTimeString(),
+            ]);
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json([
+                'error' => 'Token create failed: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Load a pre-billing token snapshot for cart restore.
+     */
+    public function getPreBillingToken(Request $request, string $tokenId)
+    {
+        $user = Auth::user();
+        if (!$user instanceof User) {
+            abort(401);
+        }
+
+        $query = PreBillingToken::where('token_id', $tokenId);
+
+        if ((int) $user->role === 2 && $user->division_id) {
+            // Allow division cashier to load their own division tokens and shared tokens.
+            $query->where(function ($divisionQuery) use ($user) {
+                $divisionQuery->where('division_id', $user->division_id)
+                    ->orWhereNull('division_id');
+            });
+        }
+
+        $token = $query->first();
+
+        if (!$token) {
+            return response()->json(['error' => 'Token already used or not found.'], 404);
+        }
+
+        if ($token->expires_at && now()->greaterThan($token->expires_at)) {
+            return response()->json(['error' => 'Token has expired.'], 410);
+        }
+
+        return response()->json([
+            'token_id' => $token->token_id,
+            'customer_id' => $token->customer_id,
+            'customer_type' => $token->customer_type ?: 'retail',
+            'sale_date' => optional($token->sale_date)->format('Y-m-d'),
+            'discount' => (float) ($token->discount ?? 0),
+            'items' => collect($token->items ?? [])->map(function ($item) {
+                return [
+                    'product_id' => (int) ($item['product_id'] ?? 0),
+                    'product_name' => $item['product_name'] ?? 'Unknown Product',
+                    'price' => (float) ($item['price'] ?? 0),
+                    'quantity' => (float) ($item['quantity'] ?? 1),
+                    'sale_unit' => $item['sale_unit'] ?? 'Not found',
+                ];
+            })->values(),
+        ]);
     }
 
     /**
