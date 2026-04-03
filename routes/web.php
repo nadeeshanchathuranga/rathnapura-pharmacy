@@ -187,6 +187,8 @@ Route::middleware(['auth', 'role:0,1,3'])->group(function () {
 Route::middleware(['auth', 'role:0,1,3'])->group(function () {
     // Inventory Management - Custom product routes BEFORE resource routes to avoid conflicts
     Route::post('products/log-activity', [ProductController::class, 'logActivity'])->name('products.log-activity');
+    Route::post('products/pricing-by-batch', [ProductController::class, 'getPricingInfoByBatch'])->name('products.pricing-by-batch');
+    Route::get('products/{product}/fifo-pricing', [ProductController::class, 'getFifoPricingInfo'])->name('products.fifo-pricing');
 
     // Product resource routes (view-only; creation happens via Stock Management)
     Route::resource('products', ProductController::class, ['only' => ['index', 'update']]);
