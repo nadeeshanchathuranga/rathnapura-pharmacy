@@ -155,6 +155,7 @@ class ProductController extends Controller
             'type_id'                  => 'nullable|exists:types,id',
             'discount_id'              => 'nullable|exists:discounts,id',
             'tax_id'                   => 'nullable|exists:taxes,id',
+            'purchase_price'           => 'nullable|numeric|min:0',
             'wholesale_price'          => 'nullable|numeric|min:0',
             'retail_price'             => 'nullable|numeric|min:0',
             'return_product'           => 'nullable|boolean',
@@ -170,8 +171,8 @@ class ProductController extends Controller
             'image'                    => 'nullable|image|max:2048',
         ]);
 
-        // Remove stock-affecting fields if they sneak in
-        unset($validated['shop_quantity_in_sales_unit'], $validated['store_quantity_in_purchase_unit']);
+        // Remove purchase_price and stock-affecting fields - they should not be updated via this endpoint
+        unset($validated['purchase_price'], $validated['shop_quantity_in_sales_unit'], $validated['store_quantity_in_purchase_unit']);
 
         if ($request->hasFile('image')) {
             if ($product->image) {

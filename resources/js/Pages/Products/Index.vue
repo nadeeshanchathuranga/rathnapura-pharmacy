@@ -282,7 +282,7 @@ defineProps({
     required: true,
   },
   currencySymbol: {
-    type: Array,
+    type: Object,
     required: true,
   },
   divisions: {
