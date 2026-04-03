@@ -90,20 +90,6 @@ onMounted(() => {
           </button>
 
           <button
-            v-if="[0, 1, 3].includes($page.props.auth.user.role)"
-            @click="setActiveTab('stores')"
-            :class="[
-              'flex items-center gap-2 px-5 py-2.5 rounded-md font-medium text-sm transition-all duration-200',
-              activeTab === 'stores'
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-700 hover:bg-gray-50',
-            ]"
-          >
-            <span class="text-lg">🛒</span>
-            <span>Stores</span>
-          </button>
-
-          <button
             @click="setActiveTab('shops')"
             :class="[
               'flex items-center gap-2 px-5 py-2.5 rounded-md font-medium text-sm transition-all duration-200',
@@ -230,82 +216,15 @@ onMounted(() => {
             <div class="font-semibold text-lg text-gray-800 mb-1">Suppliers</div>
             <div class="text-sm text-gray-600">Manage suppliers</div>
           </Link>
-        </div>
-      </div>
-
-      <!-- Stores Section -->
-      <div
-        v-if="activeTab === 'stores' && [0, 1, 3, 4].includes($page.props.auth.user.role)"
-        class="bg-white rounded-lg p-6 border border-gray-200"
-      >
-        <h3
-          class="text-xl font-semibold text-gray-800 mb-4 pb-3 border-b border-gray-200 flex items-center gap-2"
-        >
-          <span>🛍️</span> Stores
-        </h3>
-        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-
-
-           <Link
-            v-if="[0, 1, 3].includes($page.props.auth.user.role)"
-            :href="route('store-inventory.index')"
-            class="group bg-white hover:bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200"
-          >
-            <div class="text-4xl mb-3">📊</div>
-            <div class="font-semibold text-lg text-gray-800 mb-1">
-              Inventory
-            </div>
-            <div class="text-sm text-gray-600">Track store quantity adjustments and changes</div>
-          </Link>
 
           <Link
             v-if="[0, 1, 3].includes($page.props.auth.user.role)"
-            :href="route('purchase-orders.index')"
+            :href="route('stock-entries.index')"
             class="group bg-white hover:bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200"
           >
-            <div class="text-4xl mb-3">🛒</div>
-            <div class="font-semibold text-lg text-gray-800 mb-1">Purchase Orders</div>
-            <div class="text-sm text-gray-600">Create and manage formal purchase orders to suppliers.</div>
-          </Link>
-
-          <Link
-            v-if="[0, 1, 3].includes($page.props.auth.user.role)"
-            :href="route('good-receive-notes.index')"
-            class="group bg-white hover:bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200"
-          >
-            <div class="text-4xl mb-3">📦</div>
-            <div class="font-semibold text-lg text-gray-800 mb-1">
-              Goods Received Notes
-            </div>
-            <div class="text-sm text-gray-600">
-              Track the received goods from the purchase orders.
-            </div>
-          </Link>
-
-          <Link
-            v-if="[0, 1, 3].includes($page.props.auth.user.role)"
-            :href="route('good-receive-note-returns.index')"
-            class="group bg-white hover:bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200"
-          >
-            <div class="text-4xl mb-3">📦</div>
-            <div class="font-semibold text-lg text-gray-800 mb-1">Goods Return Notes</div>
-            <div class="text-sm text-gray-600">
-              Track the return goods from the purchase orders.
-            </div>
-          </Link>
-
-          <Link
-            v-if="[0, 1, 3,4].includes($page.props.auth.user.role)"
-            :href="route('product-release-notes.index')"
-            class="group bg-white hover:bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200"
-          >
-            <div class="text-4xl mb-3">📝</div>
-            <div class="font-semibold text-lg text-gray-800 mb-1">
-              Goods Transfer Release Notes
-            </div>
-            <div class="text-sm text-gray-600">
-              Manage goods transfers from stores to shop.
-            </div>
+            <div class="text-4xl mb-3">📥</div>
+            <div class="font-semibold text-lg text-gray-800 mb-1">Stock Management</div>
+            <div class="text-sm text-gray-600">Add or deduct stock in bulk by supplier</div>
           </Link>
 
           <Link
@@ -315,9 +234,8 @@ onMounted(() => {
           >
             <div class="text-4xl mb-3">💸</div>
             <div class="font-semibold text-lg text-gray-800 mb-1">Supplier Payments</div>
-            <div class="text-sm text-gray-600">Track the supplier payments</div>
+            <div class="text-sm text-gray-600">Track supplier payments</div>
           </Link>
-
         </div>
       </div>
 
@@ -428,34 +346,6 @@ onMounted(() => {
 
           <Link
             v-if="[0, 1].includes($page.props.auth.user.role)"
-            :href="route('product-transfer-requests.index')"
-            class="group bg-white hover:bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200"
-          >
-            <div class="text-4xl mb-3">📤</div>
-            <div class="font-semibold text-lg text-gray-800 mb-1">
-              Products Transfer Request
-            </div>
-            <div class="text-sm text-gray-600">
-              Manage the Products transfer request from shop.
-            </div>
-          </Link>
-
-          <a
-            v-if="[0, 1].includes($page.props.auth.user.role)"
-            href="/stock-transfer-returns"
-            class="group bg-white hover:bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 block"
-          >
-            <div class="text-4xl mb-3">🔄</div>
-            <div class="font-semibold text-lg text-gray-800 mb-1">
-              Products Transfer Returns
-            </div>
-            <div class="text-sm text-gray-600">
-              Manage the transfer from shop to store.
-            </div>
-          </a>
-
-          <Link
-            v-if="[0, 1].includes($page.props.auth.user.role)"
             :href="route('return.index')"
             class="group bg-white hover:bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200"
           >
@@ -490,17 +380,7 @@ onMounted(() => {
             </div>
             <div class="text-sm text-gray-600">Products low in shop</div>
           </Link>
-          <Link
-            v-if="[0, 1, 3].includes($page.props.auth.user.role)"
-            :href="route('reports.low-stock-store')"
-            class="group bg-white hover:bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200"
-          >
-            <div class="text-4xl mb-3">🏬</div>
-            <div class="font-semibold text-lg text-gray-800 mb-1">
-              Store Low Stock Report
-            </div>
-            <div class="text-sm text-gray-600">Products low in store</div>
-          </Link>
+
 
           <Link
             v-if="[0, 1, 2, 3].includes($page.props.auth.user.role)"

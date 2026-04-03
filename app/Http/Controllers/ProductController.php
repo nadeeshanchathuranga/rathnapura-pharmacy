@@ -14,6 +14,8 @@ use App\Models\ActivityLog;
 use App\Models\ProductAvailableQuantity;
 use App\Models\GoodsReceivedNoteProduct;
 use App\Models\Division;
+use App\Models\Supplier;
+use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
@@ -111,287 +113,78 @@ class ProductController extends Controller
             return $product;
         });
 
-        $brands = Brand::where('status', '!=', 0)
-            ->orderBy('id', 'desc')
-            ->get();
-
-        $categories = Category::where('status', '!=', 0)
-            ->orderBy('id', 'desc')
-            ->get();
-
-        $types = Type::where('status', '!=', 0)
-            ->orderBy('id', 'desc')
-            ->get();
-
-        $measurementUnits = MeasurementUnit::where('status', '!=', 0)
-            ->orderBy('id', 'desc')
-            ->get();
-
-        $discounts = Discount::where('status', '!=', 0)
-            ->orderBy('id', 'desc')
-            ->get();
-
-        $taxes = Tax::where('status', '!=', 0)
-            ->orderBy('id', 'desc')
-            ->get();
-
         $currencySymbol = CompanyInformation::first();
         $divisions = Division::active()->get(['id', 'name', 'slug']);
+
+        // Data needed by the edit modal
+        $brands    = Brand::where('status', '!=', 0)->orderBy('name')->get(['id', 'name']);
+        $categories = Category::orderBy('name')->get(['id', 'name']);
+        $types     = Type::where('status', '!=', 0)->orderBy('name')->get(['id', 'name']);
+        $units     = MeasurementUnit::where('status', '!=', 0)->orderBy('name')->get(['id', 'name', 'symbol']);
+        $discounts = Discount::where('status', '!=', 0)->orderBy('name')->get(['id', 'name', 'value', 'type']);
+        $taxes     = Tax::where('status', '!=', 0)->orderBy('name')->get(['id', 'name', 'percentage']);
+        $suppliers = Supplier::where('status', '!=', 0)->orderBy('name')->get(['id', 'name']);
+        $customers = Customer::where('status', '!=', 0)->orderBy('name')->get(['id', 'name']);
+
         return Inertia::render('Products/Index', [
-            'products' => $products,
-            'brands' => $brands,
-            'categories' => $categories,
-            'types' => $types,
-            'measurementUnits' => $measurementUnits,
-            'discounts' => $discounts,
-            'currencySymbol' => $currencySymbol,
-            'taxes' => $taxes,
-            'divisions' => $divisions,
-            'divisionFilter' => $request->division_filter,
+            'products'      => $products,
+            'currencySymbol'=> $currencySymbol,
+            'divisions'     => $divisions,
+            'divisionFilter'=> $request->division_filter,
+            'brands'        => $brands,
+            'categories'    => $categories,
+            'types'         => $types,
+            'measurementUnits' => $units,
+            'discounts'     => $discounts,
+            'taxes'         => $taxes,
+            'suppliers'     => $suppliers,
+            'customers'     => $customers,
         ]);
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        $brands = Brand::all();
-        $categories = Category::all();
-        $types = Type::all();
-        $measurementUnits = MeasurementUnit::where('status', '!=', 0)->get();
-        $discounts = Discount::all();
-        $taxes = Tax::all();
-
-        return Inertia::render('Products/Create', [
-            'brands' => $brands,
-            'categories' => $categories,
-            'types' => $types,
-            'discounts' => $discounts,
-            'taxes' => $taxes,
-            'measurementUnits' => $measurementUnits,
-        ]);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-{
-    $validated = $request->validate([
-        'name' => 'required|string|max:255',
-        'barcode' => 'nullable|string|unique:products,barcode',
-        'brand_id' => 'nullable|exists:brands,id',
-        'category_id' => 'nullable|exists:categories,id',
-        'type_id' => 'nullable|exists:types,id',
-        'discount_id' => 'nullable|exists:discounts,id',
-        'tax_id' => 'nullable|exists:taxes,id',
-
-        'shop_quantity_in_sales_unit' => 'nullable|numeric|min:0',
-        'shop_low_stock_margin' => 'nullable|numeric|min:0',
-
-        'store_quantity_in_purchase_unit' => 'nullable|numeric|min:0',
-        'store_low_stock_margin' => 'nullable|numeric|min:0',
-
-        'purchase_price' => 'nullable|numeric|min:0',
-        'wholesale_price' => 'nullable|numeric|min:0',
-        'retail_price' => 'nullable|numeric|min:0',
-
-        'return_product' => 'nullable|boolean',
-
-        'purchase_unit_id' => 'nullable|exists:measurement_units,id',
-        'sales_unit_id' => 'nullable|exists:measurement_units,id',
-        'transfer_unit_id' => 'nullable|exists:measurement_units,id',
-
-        'purchase_to_transfer_rate' => 'nullable|numeric|min:0',
-        'transfer_to_sales_rate' => 'nullable|numeric|min:0',
-
-        'status' => 'nullable|integer|in:0,1',
-        'division_id' => 'nullable|exists:divisions,id',
-
-        'image' => 'nullable|image',
-    ]);
-
-    // Generate barcode if empty
-    if (empty($validated['barcode'])) {
-        $validated['barcode'] = $this->generateBarcode();
-    }
-
-    // Image upload
-    if ($request->hasFile('image')) {
-        $validated['image'] = $request->file('image')->store('products', 'public');
-    }
-
-    // Return product convert to boolean
-    $validated['return_product'] = $request->boolean('return_product');
-    $validated['status'] = $validated['status'] ?? 1;
-
-    Product::create($validated);
-
-    return redirect()->route('products.index')
-        ->with('success', 'Product created successfully.');
-}
-
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Product $product)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Product $product)
-    {
-        $brands = Brand::all();
-        $categories = Category::all();
-        $types = Type::all();
-        $measurementUnits = MeasurementUnit::where('status', '!=', 0)->get();
-        $discounts = Discount::all();
-        $taxes = Tax::all();
-
-        return Inertia::render('Products/Edit', [
-            'product' => $product,
-            'brands' => $brands,
-            'categories' => $categories,
-            'types' => $types,
-            'discounts' => $discounts,
-            'taxes' => $taxes,
-            'measurementUnits' => $measurementUnits,
-        ]);
-    }
-
-    /**
-     * Update the specified resource in storage.
+     * Update product info (no stock fields).
      */
     public function update(Request $request, Product $product)
     {
-        $productId = $product->getKey();
-
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'barcode' => 'nullable|string|unique:products,barcode,' . $productId,
-            'brand_id' => 'nullable|exists:brands,id',
-            'category_id' => 'nullable|exists:categories,id',
-            'type_id' => 'nullable|exists:types,id',
-            'discount_id' => 'nullable|exists:discounts,id',
-            'tax_id' => 'nullable|exists:taxes,id',
-            'shop_quantity_in_sales_unit' => 'nullable|numeric|min:0',
-            'shop_low_stock_margin' => 'nullable|numeric|min:0',
-
-            'store_quantity_in_purchase_unit' => 'nullable|numeric|min:0',
-            'store_low_stock_margin' => 'nullable|numeric|min:0',
-
-            'purchase_price' => 'nullable|numeric|min:0',
-            'wholesale_price' => 'nullable|numeric|min:0',
-            'retail_price' => 'nullable|numeric|min:0',
-            'return_product' => 'nullable|boolean',
-            'purchase_unit_id' => 'nullable|exists:measurement_units,id',
-            'sales_unit_id' => 'nullable|exists:measurement_units,id',
-            'transfer_unit_id' => 'nullable|exists:measurement_units,id',
-            'purchase_to_transfer_rate' => 'nullable|numeric|min:0',
-            'transfer_to_sales_rate' => 'nullable|numeric|min:0',
-            'status' => 'nullable|integer|in:0,1',
-            'division_id' => 'nullable|exists:divisions,id',
-            'image' => 'nullable|image',
+            'name'                     => 'required|string|max:255',
+            'barcode'                  => 'nullable|string|max:100|unique:products,barcode,' . $product->id,
+            'brand_id'                 => 'nullable|exists:brands,id',
+            'category_id'              => 'nullable|exists:categories,id',
+            'type_id'                  => 'nullable|exists:types,id',
+            'discount_id'              => 'nullable|exists:discounts,id',
+            'tax_id'                   => 'nullable|exists:taxes,id',
+            'wholesale_price'          => 'nullable|numeric|min:0',
+            'retail_price'             => 'nullable|numeric|min:0',
+            'return_product'           => 'nullable|boolean',
+            'purchase_unit_id'         => 'nullable|exists:measurement_units,id',
+            'sales_unit_id'            => 'nullable|exists:measurement_units,id',
+            'transfer_unit_id'         => 'nullable|exists:measurement_units,id',
+            'purchase_to_transfer_rate'=> 'nullable|numeric|min:0',
+            'transfer_to_sales_rate'   => 'nullable|numeric|min:0',
+            'store_low_stock_margin'   => 'nullable|numeric|min:0',
+            'shop_low_stock_margin'    => 'nullable|numeric|min:0',
+            'status'                   => 'nullable|integer|in:0,1',
+            'division_id'              => 'nullable|exists:divisions,id',
+            'image'                    => 'nullable|image|max:2048',
         ]);
 
-        // Generate barcode if product doesn't have one
-        if (empty($product->getAttribute('barcode')) && empty($validated['barcode'])) {
-            $validated['barcode'] = $this->generateBarcode();
-        }
+        // Remove stock-affecting fields if they sneak in
+        unset($validated['shop_quantity_in_sales_unit'], $validated['store_quantity_in_purchase_unit']);
 
-        // Handle image upload
         if ($request->hasFile('image')) {
-            // Delete old image if exists
-            $existingImage = $product->getAttribute('image');
-            if ($existingImage) {
-                Storage::disk('public')->delete($existingImage);
+            if ($product->image) {
+                Storage::disk('public')->delete($product->image);
             }
             $validated['image'] = $request->file('image')->store('products', 'public');
+        } else {
+            unset($validated['image']);
         }
-
-        // Convert return_product to boolean
-        $validated['return_product'] = $request->boolean('return_product');
-        $validated['status'] = $validated['status'] ?? $product->getAttribute('status') ?? 1;
 
         $product->update($validated);
 
-        return redirect()->route('products.index')
-            ->with('success', 'Product updated successfully.');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Product $product)
-    {
-        try {
-            // Set status to inactive before soft deleting
-            $product->status = 0;
-            $product->save();
-
-            // Soft delete the product
-            $product->delete();
-
-            return redirect()->route('products.index')->with('success', 'Product deleted successfully');
-        } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Failed to delete product: ' . $e->getMessage()]);
-        }
-    }
-
-    /**
-     * Duplicate a product
-     */
-    public function duplicate(Request $request, Product $product)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'barcode' => 'nullable|string|unique:products,barcode',
-            'brand_id' => 'nullable|exists:brands,id',
-            'category_id' => 'nullable|exists:categories,id',
-            'type_id' => 'nullable|exists:types,id',
-            'discount_id' => 'nullable|exists:discounts,id',
-            'tax_id' => 'nullable|exists:taxes,id',
-            'shop_quantity_in_sales_unit' => 'nullable|numeric|min:0',
-            'shop_low_stock_margin' => 'nullable|numeric|min:0',
-
-            'store_quantity_in_purchase_unit' => 'nullable|numeric|min:0',
-            'store_low_stock_margin' => 'nullable|numeric|min:0',
-
-            'purchase_price' => 'nullable|numeric|min:0',
-            'wholesale_price' => 'nullable|numeric|min:0',
-            'retail_price' => 'required|numeric|min:0',
-            'return_product' => 'nullable|boolean',
-            'purchase_unit_id' => 'nullable|exists:measurement_units,id',
-            'sales_unit_id' => 'nullable|exists:measurement_units,id',
-            'transfer_unit_id' => 'nullable|exists:measurement_units,id',
-            'purchase_to_transfer_rate' => 'nullable|numeric|min:0',
-            'transfer_to_sales_rate' => 'nullable|numeric|min:0',
-
-            'status' => 'required|integer|in:0,1',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif',
-        ]);
-
-        // Auto-generate barcode if not provided
-        if (empty($validated['barcode'])) {
-            $validated['barcode'] = $this->generateBarcode();
-        }
-
-        // Image upload
-        if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('products', 'public');
-        }
-
-        // Boolean cast
-        $validated['return_product'] = $request->boolean('return_product');
-
-        Product::create($validated);
-
-        return redirect()->route('products.index')->with('success', 'Product duplicated successfully!');
+        return back()->with('success', 'Product updated successfully.');
     }
 
     /**

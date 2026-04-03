@@ -21,6 +21,9 @@ class ProductMovement extends Model
     const TYPE_SALE_RETURN = 4;    // Sale Return
     const TYPE_GRN_RETURN = 5;     // GRN Return / BRN Return
     const TYPE_STOCK_TRANSFER_RETURN = 6; // Damaged/Return from Shop to Store
+    const TYPE_STOCK_ADDITION = 7;        // Stock Entry Addition
+    const TYPE_STOCK_DEDUCTION = 8;       // Stock Entry Deduction
+    const TYPE_OPENING_STOCK = 9;         // Opening Stock Entry
 
     protected $casts = [
         'quantity' => 'decimal:2',

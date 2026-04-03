@@ -14,13 +14,6 @@
           </button>
           <h1 class="text-4xl font-bold text-gray-800">Products</h1>
         </div>
-        <!-- Add New Product Button -->
-        <button
-          @click="openCreateModal"
-          class="px-6 py-2.5 rounded-[5px] font-medium text-sm bg-blue-600 text-white hover:bg-blue-700 hover:scale-105 transition-all duration-300"
-        >
-          + Add Product
-        </button>
       </div>
       <!-- Division Filter (Admin/Backoffice only) -->
       <div v-if="isAdmin" class="mb-4 flex items-center gap-2">
@@ -191,21 +184,9 @@
                   </button>
                   <button
                     @click="openEditModal(product)"
-                    :disabled="product.status == 2"
-                    :class="[
-                      'px-4 py-2 text-xs font-medium rounded-[5px] transition-all duration-300',
-                      product.status == 2
-                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed opacity-50'
-                        : 'text-white bg-blue-600 hover:bg-blue-700 hover:scale-105',
-                    ]"
+                    class="px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-[5px] hover:bg-blue-700 hover:scale-105 transition-all duration-300"
                   >
                     Edit
-                  </button>
-                  <button
-                    @click="openDuplicateModal(product)"
-                    class="px-4 py-2 text-xs font-medium text-white bg-purple-600 rounded-[5px] hover:bg-purple-700 hover:scale-105 transition-all duration-300"
-                  >
-                    Duplicate
                   </button>
                 </div>
               </td>
@@ -251,54 +232,28 @@
 
     <!-- Modal Components for CRUD Operations -->
 
-    <!-- Create Product Modal - Full product creation form with image upload, units, pricing -->
-    <ProductCreateModal
-      v-model:open="isCreateModalOpen"
-      :brands="brands"
-      :categories="categories"
-      :types="types"
-      :measurementUnits="measurementUnits"
-      :suppliers="suppliers"
-      :customers="customers"
-      :discounts="discounts"
-      :taxes="taxes"
-      :currencySymbol="currencySymbol"
-      :divisions="divisions"
-    />
-
-    <!-- View Product Modal - Read-only display with barcode printing capability -->
+    <!-- View Product Modal -->
     <ProductViewModal
       v-model:open="isViewModalOpen"
       :product="selectedProductForView"
       :currencySymbol="currencySymbol"
     />
 
-    <!-- Edit Product Modal - Full editing interface for existing products -->
+    <!-- Edit Product Modal -->
     <ProductEditModal
+      v-if="selectedProductForEdit"
       v-model:open="isEditModalOpen"
-      :product="selectedProduct"
+      :product="selectedProductForEdit"
       :brands="brands"
       :categories="categories"
       :types="types"
       :measurementUnits="measurementUnits"
+      :discounts="discounts"
+      :taxes="taxes"
       :suppliers="suppliers"
       :customers="customers"
-      :discounts="discounts"
-      :taxes="taxes"
-      :currencySymbol="currencySymbol"
+      :currencySymbol="currencySymbol?.currency_symbol ?? ''"
       :divisions="divisions"
-    />
-    <!-- Duplicate Product Modal - Clone product with new barcode for variants -->
-    <ProductDuplicateModal
-      v-model:open="isDuplicateModalOpen"
-      :product="selectedProductForDuplicate"
-      :brands="brands"
-      :categories="categories"
-      :types="types"
-      :currencySymbol="currencySymbol"
-      :measurementUnits="measurementUnits"
-      :discounts="discounts"
-      :taxes="taxes"
     />
   </AppLayout>
 </template>
@@ -314,10 +269,8 @@
 import { ref, computed } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
 import { logActivity } from "@/composables/useActivityLog";
-import ProductCreateModal from "./Components/ProductCreateModal.vue";
 import ProductViewModal from "./Components/ProductViewModal.vue";
 import ProductEditModal from "./Components/ProductEditModal.vue";
-import ProductDuplicateModal from "./Components/ProductDuplicateModal.vue";
 
 /**
  * Component Props
@@ -328,31 +281,7 @@ defineProps({
     type: Object,
     required: true,
   },
-  brands: {
-    type: Array,
-    required: true,
-  },
   currencySymbol: {
-    type: Array,
-    required: true,
-  },
-  categories: {
-    type: Array,
-    required: true,
-  },
-  types: {
-    type: Array,
-    required: true,
-  },
-  measurementUnits: {
-    type: Array,
-    required: true,
-  },
-  discounts: {
-    type: Array,
-    required: true,
-  },
-  taxes: {
     type: Array,
     required: true,
   },
@@ -364,6 +293,14 @@ defineProps({
     type: String,
     default: null,
   },
+  brands:          { type: Array, default: () => [] },
+  categories:      { type: Array, default: () => [] },
+  types:           { type: Array, default: () => [] },
+  measurementUnits:{ type: Array, default: () => [] },
+  discounts:       { type: Array, default: () => [] },
+  taxes:           { type: Array, default: () => [] },
+  suppliers:       { type: Array, default: () => [] },
+  customers:       { type: Array, default: () => [] },
 });
 
 const page = usePage();
@@ -381,29 +318,17 @@ const applyDivisionFilter = (divId) => {
  * Modal visibility states for each operation
  * Selected product references for edit/view/delete/duplicate operations
  */
-const isCreateModalOpen = ref(false);
 const isViewModalOpen = ref(false);
-const isEditModalOpen = ref(false);
-const isDuplicateModalOpen = ref(false);
-const selectedProduct = ref(null);
 const selectedProductForView = ref(null);
-const selectedProductForDuplicate = ref(null);
 
-/**
- * Open Create Product Modal
- * Opens empty form for new product creation
- */
-const openCreateModal = () => {
-  isCreateModalOpen.value = true;
+const isEditModalOpen = ref(false);
+const selectedProductForEdit = ref(null);
+
+const openEditModal = (product) => {
+  selectedProductForEdit.value = product;
+  isEditModalOpen.value = true;
 };
 
-/**
- * Open View Product Modal
- * Displays product details in read-only mode with barcode printing
- * Also logs the view activity to activity_logs table
- *
- * @param {Object} product - Product object to view
- */
 const openViewModal = async (product) => {
   selectedProductForView.value = product;
   isViewModalOpen.value = true;
@@ -420,48 +345,5 @@ const openViewModal = async (product) => {
     qty: product.qty,
     status: product.status,
   });
-};
-
-/**
- * Open Edit Product Modal
- * Loads product data into edit form
- * Also logs the edit activity to activity_logs table
- *
- * @param {Object} product - Product object to edit
- */
-const openEditModal = (product) => {
-  selectedProduct.value = product;
-  isEditModalOpen.value = true;
-};
-
-/**
- * Open Delete Confirmation Modal
- * Shows confirmation dialog before deletion
- *
- * @param {Object} product - Product object to delete
- */
-const openDeleteModal = (product) => {
-  if (!product || !product.id) {
-    console.error("Invalid product data");
-    return;
-  }
-  selectedProductForDelete.value = { ...product };
-  isDeleteModalOpen.value = true;
-};
-
-/**
- * Open Duplicate Product Modal
- * Clones product data for creating variants
- * Useful for creating similar products with different attributes
- *
- * @param {Object} product - Product object to duplicate
- */
-const openDuplicateModal = (product) => {
-  if (!product || !product.id) {
-    console.error("Invalid product data");
-    return;
-  }
-  selectedProductForDuplicate.value = { ...product };
-  isDuplicateModalOpen.value = true;
 };
 </script>
