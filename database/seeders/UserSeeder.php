@@ -13,42 +13,49 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Set default seeded user password and hash with bcrypt
-        $pass = '123456789';
-
         // Admin User - Full Access
         User::firstOrCreate(
             ['email' => 'admin@gmail.com'],
-            ['name' => 'Admin', 'password' => bcrypt($pass), 'role' => 0]
+            ['name' => 'Admin', 'password' => 'TRSRIYAS8696', 'role' => 0]
         );
 
         // Backoffice - Can manage products and GRNs
         User::firstOrCreate(
             ['email' => 'backoffice@gmail.com'],
-            ['name' => 'Backoffice', 'password' => bcrypt($pass), 'role' => 1]
+            ['name' => 'Backoffice', 'password' => 'TRSPRO1925', 'role' => 1]
         );
 
-        // Pharmacy Cashier
+        // Cashier - access to all divisions
         User::firstOrCreate(
-            ['email' => 'pharmacy@gmail.com'],
-            ['name' => 'Pharmacy Cashier', 'password' => bcrypt($pass), 'role' => 2, 'division_id' => 1]
+            ['email' => 'cashier1@gmail.com'],
+            ['name' => 'Cashier', 'password' => 'RR576700', 'role' => 2, 'division_id' => null]
         );
 
-        // Sports Cashier
+        // Cashier - access to all divisions
         User::firstOrCreate(
-            ['email' => 'sports@gmail.com'],
-            ['name' => 'Sports Cashier', 'password' => bcrypt($pass), 'role' => 2, 'division_id' => 2]
+            ['email' => 'cashier2@gmail.com'],
+            ['name' => 'Cashier', 'password' => 'CAPLUS12000', 'role' => 2, 'division_id' => null]
         );
 
-        // Both Divisions Cashier - access to all divisions
+        // Token Counter Cashiers
         User::firstOrCreate(
-            ['email' => 'cashier@gmail.com'],
-            ['name' => 'Cashier', 'password' => bcrypt($pass), 'role' => 2, 'division_id' => null]
+            ['email' => 'tc1@gmail.com'],
+            ['name' => 'Token Cashier', 'password' => 'TRS1900', 'role' => 3, 'division_id' => null]
         );
-        
+
         User::firstOrCreate(
-            ['email' => 'tokencashier@gmail.com'],
-            ['name' => 'Token Cashier', 'password' => bcrypt($pass), 'role' => 3, 'division_id' => null]
+            ['email' => 'tc2@gmail.com'],
+            ['name' => 'Token Cashier', 'password' => 'TRS3070', 'role' => 3, 'division_id' => null]
+        );
+
+        User::firstOrCreate(
+            ['email' => 'tc3@gmail.com'],
+            ['name' => 'Token Cashier', 'password' => 'Thikshani7575', 'role' => 3, 'division_id' => null]
+        );
+
+        User::firstOrCreate(
+            ['email' => 'tc4@gmail.com'],
+            ['name' => 'Token Cashier', 'password' => 'RIYAS156', 'role' => 3, 'division_id' => null]
         );
 
     }
