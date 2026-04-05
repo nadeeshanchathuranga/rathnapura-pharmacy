@@ -92,6 +92,7 @@
                     <option value="0">Admin</option>
                     <option value="1">Backoffice</option>
                     <option value="2">Cashier</option>
+                    <option value="3">Token Cashier</option>
                   </select>
                   <p v-if="form.errors.role" class="mt-1 text-sm text-red-600">
                     {{ form.errors.role }}

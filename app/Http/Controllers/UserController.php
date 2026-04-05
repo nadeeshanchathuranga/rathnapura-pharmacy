@@ -25,7 +25,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
-            'role' => 'required|in:0,1,2',
+            'role' => 'required|in:0,1,2,3',
             'division_id' => 'nullable|exists:divisions,id',
             'is_active' => 'sometimes|boolean',
         ]);
@@ -49,7 +49,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8',
-            'role' => 'required|in:0,1,2',
+            'role' => 'required|in:0,1,2,3',
             'division_id' => 'nullable|exists:divisions,id',
             'is_active' => 'sometimes|boolean',
         ]);

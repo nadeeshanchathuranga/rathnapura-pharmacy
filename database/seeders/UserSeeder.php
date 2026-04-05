@@ -42,7 +42,12 @@ class UserSeeder extends Seeder
 
         // Both Divisions Cashier - access to all divisions
         User::firstOrCreate(
-            ['email' => 'cashier@gmail.com'],
+            ['email' => 'cashier1@gmail.com'],
+            ['name' => 'Cashier', 'password' => bcrypt($pass), 'role' => 2, 'division_id' => null]
+        );
+        // Both Divisions Cashier - access to all divisions
+        User::firstOrCreate(
+            ['email' => 'cashier2@gmail.com'],
             ['name' => 'Cashier', 'password' => bcrypt($pass), 'role' => 2, 'division_id' => null]
         );
         User::firstOrCreate(
