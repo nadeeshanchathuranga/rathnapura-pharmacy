@@ -249,58 +249,6 @@
           </div>
         </div>
 
-        <!-- Pre-billing Token -->
-        <div class="bg-white rounded-2xl p-4 shadow-md border border-gray-200 mb-6">
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
-            <div class="lg:col-span-2">
-              <label class="block text-sm font-semibold text-gray-700 mb-2">🎫 Pre-billing Token</label>
-              <div class="flex flex-col sm:flex-row gap-2">
-                <button
-                  v-if="canGenerateToken"
-                  @click="generatePreBillingToken"
-                  type="button"
-                  :disabled="form.items.length === 0 || generatingToken"
-                  class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-[5px] transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {{ generatingToken ? 'Generating...' : 'Generate Token' }}
-                </button>
-                <input
-                  v-if="canLoadTokenCart"
-                  type="text"
-                  v-model="tokenBarcodeInput"
-                  @keyup.enter="loadCartByToken"
-                  placeholder="Scan / enter token barcode"
-                  class="flex-1 px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-[5px] focus:ring-2 focus:ring-indigo-500 font-mono"
-                />
-                <button
-                  v-if="canLoadTokenCart"
-                  @click="loadCartByToken"
-                  type="button"
-                  :disabled="loadingTokenCart"
-                  class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-[5px] transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {{ loadingTokenCart ? 'Loading...' : 'Load Token Cart' }}
-                </button>
-                <button
-                  v-if="canPrintToken"
-                  @click="printPreBillingToken"
-                  type="button"
-                  :disabled="!preBillingTokenId"
-                  class="px-4 py-2.5 bg-slate-700 hover:bg-slate-800 text-white font-semibold rounded-[5px] transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Print Token
-                </button>
-              </div>
-              <p v-if="preBillingTokenId" class="mt-2 text-xs text-gray-600">
-                Active token: <span class="font-mono font-semibold">{{ preBillingTokenId }}</span>
-              </p>
-            </div>
-            <div v-if="canSeeTokenBarcode" class="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-3 min-h-[96px] flex items-center justify-center">
-              <svg ref="tokenBarcodeSvg"></svg>
-            </div>
-          </div>
-        </div>
-
         <div v-if="showNormalPosUI" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Left Side - Cart -->
           <div class="lg:col-span-2 space-y-6">
@@ -457,9 +405,46 @@
                 </table>
               </div>
             </div>
-          </div>
 
-          <!-- Right Side - Bill Summary -->
+            <!-- Pre-billing Token -->
+            <div class="bg-white rounded-2xl p-4 shadow-md border border-gray-200">
+              <label class="block text-sm font-semibold text-gray-700 mb-2">🎫 Pre-billing Token</label>
+              <div class="flex flex-col sm:flex-row gap-2">
+                <input
+                  v-if="canLoadTokenCart"
+                  type="text"
+                  v-model="tokenBarcodeInput"
+                  @keyup.enter="loadCartByToken"
+                  placeholder="Scan / enter token barcode"
+                  class="flex-1 px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-[5px] focus:ring-2 focus:ring-indigo-500 font-mono"
+                />
+                <button
+                  v-if="canLoadTokenCart"
+                  @click="loadCartByToken"
+                  type="button"
+                  :disabled="loadingTokenCart"
+                  class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-[5px] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {{ loadingTokenCart ? 'Loading...' : 'Load Token Cart' }}
+                </button>
+                <button
+                  v-if="canPrintToken"
+                  @click="generateAndPrintToken"
+                  type="button"
+                  :disabled="form.items.length === 0 || generatingToken"
+                  class="px-4 py-2.5 bg-slate-700 hover:bg-slate-800 text-white font-semibold rounded-[5px] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {{ generatingToken ? 'Generating...' : 'Print Token' }}
+                </button>
+              </div>
+              <p v-if="preBillingTokenId" class="mt-2 text-xs text-gray-600">
+                Active token: <span class="font-mono font-semibold">{{ preBillingTokenId }}</span>
+              </p>
+              <div v-if="canSeeTokenBarcode && preBillingTokenId" class="mt-3">
+                <svg ref="tokenBarcodeSvg"></svg>
+              </div>
+            </div>
+          </div>
           <div class="lg:col-span-1">
             <div
               class="bg-white rounded-2xl p-6 shadow-md border border-gray-200 sticky top-6"
@@ -587,15 +572,7 @@
                 <button
                   @click="openPaymentModalForMethod(0)"
                   data-shortcut="F4"
-                  :disabled="form.items.length === 0"
-                  class="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-200 disabled:cursor-not-allowed text-white font-bold py-4 px-4 rounded-lg transition text-lg shadow-lg"
-                >
-                  💵 Cash (F4)
-                </button>
-                <button
-                  @click="openPaymentModalForMethod(1)"
-                  data-shortcut="F9"
-                  :disabled="form.items.length === 0"
+ed="form.items.length === 0"
                   class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-200 disabled:cursor-not-allowed text-white font-bold py-4 px-4 rounded-lg transition text-lg shadow-lg"
                 >
                   💳 Card (F9)
@@ -777,6 +754,7 @@
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-2">🔍 Search Products</label>
             <input
+              ref="productSearchInput"
               type="text"
               v-model="productFilters.search"
               @input="filterProducts"
@@ -1314,6 +1292,7 @@ const selectedProduct = ref(null);
 const selectedQuantity = ref(1);
 const barcodeInput = ref("");
 const barcodeField = ref(null);
+const productSearchInput = ref(null);
 const tokenBarcodeSvg = ref(null);
 const showSuccessModal = ref(false);
 const showPaymentModal = ref(false);
@@ -1674,6 +1653,13 @@ const createTokenBarcodeDataUrl = (tokenId) => {
   return canvas.toDataURL("image/png");
 };
 
+const generateAndPrintToken = async () => {
+  await generatePreBillingToken();
+  if (preBillingTokenId.value) {
+    printPreBillingToken();
+  }
+};
+
 const generatePreBillingToken = async () => {
   if (!canGenerateToken.value) {
     alert("You do not have permission to generate tokens.");
@@ -1713,7 +1699,6 @@ const generatePreBillingToken = async () => {
     form.pre_billing_token_id = tokenId;
 
     await renderTokenBarcode(tokenId);
-    alert(`Pre-billing token created: ${tokenId}`);
   } catch (error) {
     console.error("Failed to generate pre-billing token", error);
     const validationError = error?.response?.data?.errors
@@ -2124,6 +2109,7 @@ const openProductModal = () => {
 
   showProductModal.value = true;
   filterProducts();
+  nextTick(() => productSearchInput.value?.focus());
   // Initialize all product quantities to 1
   props.products.forEach((product) => {
     if (!productQuantities.value[product.id]) {
