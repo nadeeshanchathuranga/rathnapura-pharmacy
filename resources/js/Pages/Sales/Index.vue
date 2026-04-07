@@ -166,34 +166,6 @@
                             </button>
                         </div>
                     </div>
-
-
-                    <!-- Pre-billing Token -->
-                            <div class="bg-white rounded-2xl p-4 mb-3 shadow-md border border-gray-200">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">🎫 Pre-billing
-                                    Token</label>
-                                <div class="flex flex-col sm:flex-row gap-2">
-                                    <input ref="tokenBarcodeField" v-if="canLoadTokenCart" type="text" v-model="tokenBarcodeInput"
-                                        @keyup.enter="loadCartByToken" placeholder="Scan / enter token barcode"
-                                        class="flex-1 px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-[5px] focus:ring-2 focus:ring-indigo-500 font-mono" />
-                                    <button v-if="canLoadTokenCart" @click="loadCartByToken" type="button"
-                                        :disabled="loadingTokenCart"
-                                        class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-[5px] transition disabled:opacity-50 disabled:cursor-not-allowed">
-                                        {{ loadingTokenCart ? 'Loading...' : 'Load Token Cart' }}
-                                    </button>
-                                    <button v-if="canPrintToken" @click="generateAndPrintToken" type="button"
-                                        :disabled="form.items.length === 0 || generatingToken"
-                                        class="px-4 py-2.5 bg-slate-700 hover:bg-slate-800 text-white font-semibold rounded-[5px] transition disabled:opacity-50 disabled:cursor-not-allowed">
-                                        {{ generatingToken ? 'Generating...' : 'Print Token' }}
-                                    </button>
-                                </div>
-                                <p v-if="preBillingTokenId" class="mt-2 text-xs text-gray-600">
-                                    Active token: <span class="font-mono font-semibold">{{ preBillingTokenId }}</span>
-                                </p>
-                                <div v-if="canSeeTokenBarcode && preBillingTokenId" class="mt-3">
-                                    <svg ref="tokenBarcodeSvg"></svg>
-                                </div>
-                            </div>
                     <div v-if="showNormalPosUI" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <!-- Left Side - Cart -->
                         <div class="lg:col-span-2 space-y-6">
@@ -281,20 +253,11 @@
                                                         {{ (item.price || 0).toFixed(2) }}</span>
                                                 </td>
                                                 <td class="px-4 py-3 text-center">
-                                                    <div class="flex items-center justify-center gap-2">
-                                                        <button @click="updateQuantity(index, item.quantity - 1)"
-                                                            class="w-7 h-7 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded font-bold transition">
-                                                            -
-                                                        </button>
-                                                        <input type="number" :value="item.quantity" @input="
-                                                            updateQuantity(index, parseInt($event.target.value) || 1)
-                                                            " class="w-16 text-center font-semibold bg-white text-gray-800 border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                            min="1" />
-                                                        <button @click="updateQuantity(index, item.quantity + 1)"
-                                                            class="w-7 h-7 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded font-bold transition">
-                                                            +
-                                                        </button>
-                                                    </div>
+                                                    <input type="number"
+                                                        :value="item.quantity === 1 ? '' : item.quantity"
+                                                        @input="updateQuantity(index, Number($event.target.value))"
+                                                        class="w-20 text-center font-semibold bg-white text-gray-800 border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                        min="1" step="1"  />
                                                 </td>
                                                 <td class="px-4 py-3 text-right font-semibold text-green-600">
                                                     ({{ page.props.currency || "Rs." }})
@@ -314,6 +277,33 @@
                                             </tr>
                                         </tbody>
                                     </table>
+                                </div>
+                            </div>
+
+                            <!-- Pre-billing Token -->
+                            <div class="bg-white rounded-2xl p-4 shadow-md border border-gray-200">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">🎫 Pre-billing
+                                    Token</label>
+                                <div class="flex flex-col sm:flex-row gap-2">
+                                    <input ref="tokenBarcodeField" v-if="canLoadTokenCart" type="text" v-model="tokenBarcodeInput"
+                                        @keyup.enter="loadCartByToken" placeholder="Scan / enter token barcode"
+                                        class="flex-1 px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-[5px] focus:ring-2 focus:ring-indigo-500 font-mono" />
+                                    <button v-if="canLoadTokenCart" @click="loadCartByToken" type="button"
+                                        :disabled="loadingTokenCart"
+                                        class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-[5px] transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                        {{ loadingTokenCart ? 'Loading...' : 'Load Token Cart' }}
+                                    </button>
+                                    <button v-if="canPrintToken" @click="generateAndPrintToken" type="button"
+                                        :disabled="form.items.length === 0 || generatingToken"
+                                        class="px-4 py-2.5 bg-slate-700 hover:bg-slate-800 text-white font-semibold rounded-[5px] transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                        {{ generatingToken ? 'Generating...' : 'Print Token' }}
+                                    </button>
+                                </div>
+                                <p v-if="preBillingTokenId" class="mt-2 text-xs text-gray-600">
+                                    Active token: <span class="font-mono font-semibold">{{ preBillingTokenId }}</span>
+                                </p>
+                                <div v-if="canSeeTokenBarcode && preBillingTokenId" class="mt-3">
+                                    <svg ref="tokenBarcodeSvg"></svg>
                                 </div>
                             </div>
 
@@ -446,7 +436,12 @@
                                 </div>
                             </div>
                         </div>
+
+
                     </div>
+
+
+
                 </div>
             </div>
         </div>
@@ -696,18 +691,11 @@
                                     </div>
                                 </div>
 
-                                <!-- Quantity Input -->
                                 <div v-if="!isOutOfStock(product)" class="mt-3 pt-3 border-t border-gray-200">
-                                    <div class="flex items-center gap-2">
-                                        <input type="number" v-model.number="productQuantities[product.id]" min="1"
-                                            :max="product.shop_quantity_in_sales_unit"
-                                            class="flex-1 px-2 py-1 bg-white text-gray-800 border border-gray-300 text-center rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                            @click.stop />
-                                        <button @click="addToCart(product)"
-                                            class="px-3 py-1 bg-green-600 text-white rounded">
-                                            Add
-                                        </button>
-                                    </div>
+                                    <button @click.stop="addToCart(product)"
+                                        class="w-full px-3 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded transition">
+                                        Add to Cart
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -1609,32 +1597,27 @@ const addToCart = (product) => {
     const existingIndex = form.items.findIndex((item) => item.product_id === product.id);
 
     if (existingIndex !== -1) {
-        // Product already in cart - remove it (toggle)
-        form.items.splice(existingIndex, 1);
-    } else {
-        // Product not in cart - add it
-        const price = getCurrentPrice(product);
-
-        form.items.push({
-            product_id: product.id,
-            product_name: product.name,
-            division_id: product.division_id ?? null,
-            price: parseFloat(price),
-            quantity: productQuantities.value[product.id] || 1,
-            sale_unit: product.salesUnit ? product.salesUnit.name : 'Not found',
-            discount: product.discount
-                ? {
-                    name: product.discount.name,
-                    value: product.discount.value,
-                    type: product.discount.type,
-                }
-                : null,
-            discountApplied: false,
-        });
-
-        // Reset quantity input after adding
-        productQuantities.value[product.id] = 1;
+        return;
     }
+
+    const price = getCurrentPrice(product);
+
+    form.items.push({
+        product_id: product.id,
+        product_name: product.name,
+        division_id: product.division_id ?? null,
+        price: parseFloat(price),
+        quantity: 1,
+        sale_unit: product.salesUnit ? product.salesUnit.name : 'Not found',
+        discount: product.discount
+            ? {
+                name: product.discount.name,
+                value: product.discount.value,
+                type: product.discount.type,
+            }
+            : null,
+        discountApplied: false,
+    });
 };
 
 const applyDiscount = (index) => {
@@ -1689,11 +1672,8 @@ const removeItemDiscount = (index) => {
 
 // Update quantity in cart
 const updateQuantity = (index, newQty) => {
-    if (newQty > 0) {
-        form.items[index].quantity = newQty;
-    } else {
-        removeItem(index);
-    }
+    const quantity = Number.isFinite(newQty) ? Math.floor(newQty) : 1;
+    form.items[index].quantity = quantity > 0 ? quantity : 1;
 };
 
 // Clear cart
