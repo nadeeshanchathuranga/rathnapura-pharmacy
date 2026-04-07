@@ -1759,7 +1759,6 @@ const loadCartByToken = async () => {
     preBillingTokenId.value = data.token_id || tokenId;
     await renderTokenBarcode(preBillingTokenId.value);
 
-    alert(`Loaded token cart: ${preBillingTokenId.value}`);
     barcodeField.value?.focus();
   } catch (error) {
     console.error("Failed to load token cart", error);
