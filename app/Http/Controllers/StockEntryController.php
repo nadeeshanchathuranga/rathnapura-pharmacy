@@ -58,7 +58,7 @@ class StockEntryController extends Controller
             'products.*.new_division_id'    => 'nullable|exists:divisions,id',
             'products.*.new_retail_price'   => 'nullable|numeric|min:0',
             'products.*.purchase_price'     => 'nullable|numeric|min:0',
-            'products.*.quantity'           => 'required|numeric|min:0.01',
+            'products.*.quantity'           => 'required|numeric|min:0',
         ]);
 
         $user = Auth::user();
