@@ -39,6 +39,7 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
+                'print_stock_entry_id' => fn () => $request->session()->get('print_stock_entry_id'),
             ],
             'divisions' => fn () => Division::active()->get(['id', 'name', 'slug']),
         ];

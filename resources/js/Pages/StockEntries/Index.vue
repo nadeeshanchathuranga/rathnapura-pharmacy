@@ -1,7 +1,7 @@
 ﻿<script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { Head, router, usePage } from "@inertiajs/vue3";
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 
 const props = defineProps({
     entries: Object,
@@ -27,6 +27,7 @@ const errors = ref({});
 
 const form = ref({
     entry_number: props.entryNumber,
+    invoice_number: "",
     supplier_id: "",
     entry_type: "addition",
     entry_date: new Date().toISOString().slice(0, 10),
@@ -104,6 +105,7 @@ function submit() {
 
     const payload = {
         entry_number: form.value.entry_number,
+        invoice_number: form.value.invoice_number || null,
         supplier_id: form.value.supplier_id || null,
         entry_date: form.value.entry_date,
         remarks: form.value.remarks,
@@ -133,9 +135,14 @@ function submit() {
         ...payload,
         entry_type: form.value.entry_type,
     }, {
-        onSuccess: () => {
+        onSuccess: (pageResponse) => {
             showForm.value = false;
             submitting.value = false;
+
+            const printId = pageResponse?.props?.flash?.print_stock_entry_id;
+            if (printId) {
+                window.open(route('stock-entries.print', printId), '_blank');
+            }
         },
         onError: (errs) => {
             errors.value = errs;
@@ -147,6 +154,7 @@ function submit() {
 function openForm() {
     form.value = {
         entry_number: props.entryNumber,
+        invoice_number: "",
         supplier_id: "",
         entry_type: "addition",
         entry_date: new Date().toISOString().slice(0, 10),
@@ -167,6 +175,15 @@ function formatDate(d) {
     if (!d) return "-";
     return new Date(d).toLocaleDateString("en-GB");
 }
+
+watch(
+    () => page.props?.flash?.print_stock_entry_id,
+    (printId) => {
+        if (printId) {
+            window.open(route('stock-entries.print', printId), '_blank');
+        }
+    }
+);
 </script>
 
 <template>
@@ -239,6 +256,17 @@ function formatDate(d) {
                             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         />
                         <p v-if="errors.entry_number" class="text-xs text-red-600 mt-1">{{ errors.entry_number }}</p>
+                    </div>
+
+                   <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Invoice Number <span class="text-gray-400">(optional)</span></label>
+                        <input
+                            v-model="form.invoice_number"
+                            type="text"
+                            placeholder="e.g. INV-2026-001"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        />
+                        <p v-if="errors.invoice_number" class="text-xs text-red-600 mt-1">{{ errors.invoice_number }}</p>
                     </div>
 
                     <div>
@@ -497,6 +525,7 @@ function formatDate(d) {
                         <thead class="bg-gray-50 text-xs text-gray-500 uppercase border-b border-gray-100">
                             <tr>
                                 <th class="px-5 py-3 text-left">Entry #</th>
+                                <th class="px-5 py-3 text-left">Invoice #</th>
                                 <th class="px-5 py-3 text-left">Type</th>
                                 <th class="px-5 py-3 text-left">Date</th>
                                 <th class="px-5 py-3 text-left">Supplier</th>
@@ -509,6 +538,7 @@ function formatDate(d) {
                         <tbody class="divide-y divide-gray-100">
                             <tr v-for="entry in entries.data" :key="entry.id" class="hover:bg-gray-50">
                                 <td class="px-5 py-3 font-mono text-gray-700 font-medium text-xs">{{ entry.entry_number }}</td>
+                                <td class="px-5 py-3 font-mono text-gray-700 text-xs">{{ entry.invoice_number || '-' }}</td>
                                 <td class="px-5 py-3">
                                     <span
                                         :class="entry.entry_type === 'addition' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
@@ -531,6 +561,11 @@ function formatDate(d) {
                                 <td class="px-5 py-3 text-gray-500 text-xs">{{ entry.remarks || "-" }}</td>
                                 <td class="px-5 py-3 text-gray-500 text-xs">{{ entry.user?.name ?? "-" }}</td>
                                 <td class="px-5 py-3">
+                                    <a
+                                        :href="route('stock-entries.print', entry.id)"
+                                        target="_blank"
+                                        class="text-blue-500 hover:text-blue-700 text-xs transition mr-3"
+                                    >Print Invoice</a>
                                     <button
                                         @click="deleteEntry(entry.id)"
                                         class="text-red-400 hover:text-red-600 text-xs transition"

@@ -10,6 +10,7 @@ class StockEntry extends Model
 {
     protected $fillable = [
         'entry_number',
+        'invoice_number',
         'supplier_id',
         'user_id',
         'entry_type',
