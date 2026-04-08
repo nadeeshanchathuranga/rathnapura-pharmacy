@@ -9,6 +9,7 @@ use App\Models\ProductMovement;
 use App\Models\StockEntry;
 use App\Models\StockEntryProduct;
 use App\Models\Supplier;
+use App\Models\CompanyInformation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -45,6 +46,7 @@ class StockEntryController extends Controller
     {
         $validated = $request->validate([
             'entry_number'                  => 'required|string|unique:stock_entries,entry_number',
+            'invoice_number'                => 'nullable|string|max:100',
             'supplier_id'                   => 'nullable|exists:suppliers,id',
             'entry_type'                    => 'required|in:addition,deduction',
             'entry_date'                    => 'required|date',
@@ -67,6 +69,7 @@ class StockEntryController extends Controller
         try {
             $entry = StockEntry::create([
                 'entry_number' => $validated['entry_number'],
+                'invoice_number' => $validated['invoice_number'] ?? null,
                 'supplier_id'  => $validated['supplier_id'] ?? null,
                 'user_id'      => Auth::id(),
                 'entry_type'   => $validated['entry_type'],  
@@ -203,7 +206,8 @@ class StockEntryController extends Controller
             DB::commit();
 
             return redirect()->route('stock-entries.index')
-                ->with('success', 'Stock entry saved successfully.');
+                ->with('success', 'Stock entry saved successfully.')
+                ->with('print_stock_entry_id', $entry->id);
 
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -217,6 +221,18 @@ class StockEntryController extends Controller
 
         return redirect()->route('stock-entries.index')
             ->with('success', 'Stock entry deleted.');
+    }
+
+    public function printInvoice(StockEntry $stockEntry)
+    {
+        $stockEntry->load(['supplier', 'user', 'products.product']);
+        $companyInformation = CompanyInformation::first();
+
+        return view('stock-entries.invoice', [
+            'stockEntry' => $stockEntry,
+            'companyInformation' => $companyInformation,
+            'currency' => $companyInformation?->currency ?? 'Rs.',
+        ]);
     }
 
     // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
