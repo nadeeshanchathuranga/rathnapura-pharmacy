@@ -387,10 +387,79 @@ class StockEntryController extends Controller
 
     public function destroy(StockEntry $stockEntry)
     {
-        $stockEntry->delete();
+        $stockEntry->load('products.product');
 
-        return redirect()->route('stock-entries.index')
-            ->with('success', 'Stock entry deleted.');
+        DB::beginTransaction();
+        try {
+            foreach ($stockEntry->products as $line) {
+                $product = $line->product;
+                if (!$product) {
+                    continue;
+                }
+
+                $qty = (float) $line->quantity;
+
+                if ($stockEntry->entry_type === 'addition') {
+                    // Reverse an addition: remove stock that was added
+                    if ($product->shop_quantity_in_sales_unit < $qty) {
+                        throw new \Exception(
+                            "Cannot delete entry: insufficient stock to reverse \"{$product->name}\". " .
+                            "Available: {$product->shop_quantity_in_sales_unit}, Need to remove: {$qty}"
+                        );
+                    }
+                    $product->decrement('shop_quantity_in_sales_unit', $qty);
+                    $this->deductBatchesFifo($product, $qty);
+
+                    ProductMovement::recordMovement(
+                        $product->id,
+                        ProductMovement::TYPE_STOCK_ADDITION,
+                        -$qty,
+                        $stockEntry->entry_number . ' (deleted)'
+                    );
+                } else {
+                    // Reverse a deduction: restore stock that was removed
+                    $product->increment('shop_quantity_in_sales_unit', $qty);
+                    $purchaseQty = $this->convertSalesToPurchaseUnits($product, $qty);
+
+                    $latestBatch = ProductAvailableQuantity::where('product_id', $product->id)
+                        ->orderBy('created_at', 'desc')
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($latestBatch) {
+                        $latestBatch->increment('available_quantity', $purchaseQty > 0 ? $purchaseQty : $qty);
+                    } else {
+                        ProductAvailableQuantity::create([
+                            'product_id'                => $product->id,
+                            'batch_number'              => null,
+                            'available_quantity'        => $purchaseQty > 0 ? $purchaseQty : $qty,
+                            'quantity_in_transfer_unit' => 0,
+                            'quantity_in_sales_unit'    => $qty,
+                            'unit_id'                   => $product->sales_unit_id ?? $product->purchase_unit_id ?? null,
+                            'goods_received_note_id'    => null,
+                        ]);
+                    }
+
+                    ProductMovement::recordMovement(
+                        $product->id,
+                        ProductMovement::TYPE_STOCK_DEDUCTION,
+                        $qty,
+                        $stockEntry->entry_number . ' (deleted)'
+                    );
+                }
+            }
+
+            $stockEntry->delete();
+
+            DB::commit();
+
+            return redirect()->route('stock-entries.index')
+                ->with('success', 'Stock entry deleted and stock quantities reversed.');
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return back()->with('error', $e->getMessage());
+        }
     }
 
     public function printInvoice(StockEntry $stockEntry)

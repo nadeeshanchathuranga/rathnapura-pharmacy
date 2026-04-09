@@ -250,10 +250,18 @@ watch(
 
             <!-- Global error -->
             <div
-                v-if="errors.error"
+                v-if="errors.error || page.props.flash?.error"
                 class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
             >
-                {{ errors.error }}
+                {{ errors.error || page.props.flash?.error }}
+            </div>
+
+            <!-- Global success -->
+            <div
+                v-if="page.props.flash?.success"
+                class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm"
+            >
+                {{ page.props.flash?.success }}
             </div>
 
             <!-- Entry Form -->
