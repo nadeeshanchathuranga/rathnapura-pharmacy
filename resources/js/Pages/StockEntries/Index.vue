@@ -112,25 +112,26 @@ function submit() {
         entry_date: form.value.entry_date,
         remarks: form.value.remarks,
             products: form.value.products.map((p) =>
-            p.isNew
-                ? {
-                      is_new: true,
-                      product_id: null,
-                      new_name: p.new_name,
-                      new_barcode: p.new_barcode || null,
-                      new_category_id: p.new_category_id || null,
-                      new_division_id: p.new_division_id || null,
-                      new_retail_price: p.new_retail_price || null,
-                      purchase_price: p.purchase_price || null,
-                      quantity: p.quantity,
-                  }
-                : {
-                      is_new: false,
-                      product_id: p.product_id,
-                      purchase_price: p.purchase_price || null,
-                      quantity: p.quantity,
-                  }
-        ),
+                p.isNew
+                    ? {
+                        is_new: true,
+                        product_id: null,
+                        new_name: p.new_name,
+                        new_barcode: p.new_barcode || null,
+                        new_category_id: p.new_category_id || null,
+                        new_division_id: p.new_division_id || null,
+                        new_retail_price: p.new_retail_price || null,
+                        purchase_price: p.purchase_price || null,
+                        quantity: p.quantity,
+                    }
+                    : {
+                        is_new: false,
+                        product_id: p.product_id,
+                        purchase_price: p.purchase_price || null,
+                        quantity: p.quantity,
+                        retail_price: p.retail_price ?? null,
+                    }
+            ),
     };
 
     if (isEditing.value) {
@@ -200,6 +201,7 @@ function openEditForm(entry) {
             current_stock: Number(p.product?.shop_quantity_in_sales_unit ?? 0),
             quantity: String(parseFloat(p.quantity)),
             purchase_price: p.purchase_price ?? '',
+            retail_price: p.product?.retail_price ?? '',
         })),
     };
     errors.value = {};
@@ -509,7 +511,15 @@ watch(
                                         placeholder="0.00 *"
                                         class="w-28 border border-orange-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none"
                                     />
-                                    <span v-else class="text-xs text-gray-400">-</span>
+                                    <input
+                                        v-else
+                                        v-model="line.retail_price"
+                                        type="number"
+                                        min="0"
+                                        step="any"
+                                        placeholder="0.00"
+                                        class="w-28 border border-orange-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none"
+                                    />
                                 </td>
 
                                 <!-- Remove -->

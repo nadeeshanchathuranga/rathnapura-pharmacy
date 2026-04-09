@@ -226,6 +226,7 @@ class StockEntryController extends Controller
             'products.*.product_id'     => 'required|integer|exists:products,id',
             'products.*.quantity'       => 'required|numeric|min:0.01',
             'products.*.purchase_price' => 'nullable|numeric|min:0',
+            'products.*.retail_price'   => 'nullable|numeric|min:0',
         ]);
 
         DB::beginTransaction();
@@ -368,9 +369,17 @@ class StockEntryController extends Controller
                     'notes'            => null,
                 ]);
 
-                if ($stockEntry->entry_type === 'addition' && !empty($line['purchase_price'])) {
-                    Product::where('id', $line['product_id'])
-                        ->update(['purchase_price' => (float) $line['purchase_price']]);
+                if ($stockEntry->entry_type === 'addition') {
+                    $updateFields = [];
+                    if (!empty($line['purchase_price'])) {
+                        $updateFields['purchase_price'] = (float) $line['purchase_price'];
+                    }
+                    if (isset($line['retail_price']) && $line['retail_price'] !== null && $line['retail_price'] !== '') {
+                        $updateFields['retail_price'] = (float) $line['retail_price'];
+                    }
+                    if (!empty($updateFields)) {
+                        Product::where('id', $line['product_id'])->update($updateFields);
+                    }
                 }
             }
 
