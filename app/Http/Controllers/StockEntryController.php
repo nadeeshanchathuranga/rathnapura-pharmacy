@@ -215,6 +215,176 @@ class StockEntryController extends Controller
         }
     }
 
+    public function update(Request $request, StockEntry $stockEntry)
+    {
+        $validated = $request->validate([
+            'invoice_number'            => 'nullable|string|max:100',
+            'supplier_id'               => 'nullable|exists:suppliers,id',
+            'entry_date'                => 'required|date',
+            'remarks'                   => 'nullable|string|max:500',
+            'products'                  => 'required|array|min:1',
+            'products.*.product_id'     => 'required|integer|exists:products,id',
+            'products.*.quantity'       => 'required|numeric|min:0.01',
+            'products.*.purchase_price' => 'nullable|numeric|min:0',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Map existing product quantities by product_id
+            $existingQtys = $stockEntry->products()
+                ->get()
+                ->keyBy('product_id')
+                ->map(fn($p) => (float) $p->quantity);
+
+            // Map new product quantities by product_id (sum if duplicate)
+            $newQtys = collect($validated['products'])
+                ->groupBy('product_id')
+                ->map(fn($rows) => $rows->sum(fn($r) => (float) $r['quantity']));
+
+            $allIds = $existingQtys->keys()->merge($newQtys->keys())->unique();
+
+            foreach ($allIds as $pid) {
+                $oldQty = $existingQtys->get($pid, 0.0);
+                $newQty = $newQtys->get($pid, 0.0);
+                $diff   = $newQty - $oldQty;
+
+                if (abs($diff) < 0.0001) {
+                    continue;
+                }
+
+                $product = Product::lockForUpdate()->find($pid);
+                if (!$product) {
+                    continue;
+                }
+
+                if ($stockEntry->entry_type === 'addition') {
+                    if ($diff > 0) {
+                        // Adding more stock
+                        $product->increment('shop_quantity_in_sales_unit', $diff);
+                        $purchaseQty = $this->convertSalesToPurchaseUnits($product, $diff);
+
+                        $batch = ProductAvailableQuantity::where('product_id', $pid)
+                            ->where('batch_number', $stockEntry->entry_number)
+                            ->first();
+                        if ($batch) {
+                            $batch->increment('available_quantity', $purchaseQty > 0 ? $purchaseQty : $diff);
+                        } else {
+                            ProductAvailableQuantity::create([
+                                'product_id'                => $pid,
+                                'batch_number'              => $stockEntry->entry_number,
+                                'available_quantity'        => $purchaseQty > 0 ? $purchaseQty : $diff,
+                                'quantity_in_transfer_unit' => 0,
+                                'quantity_in_sales_unit'    => $diff,
+                                'unit_id'                   => $product->sales_unit_id ?? $product->purchase_unit_id ?? null,
+                                'goods_received_note_id'    => null,
+                            ]);
+                        }
+
+                        ProductMovement::recordMovement(
+                            $pid, ProductMovement::TYPE_STOCK_ADDITION, $diff,
+                            $stockEntry->entry_number . ' (edit)'
+                        );
+                    } else {
+                        // Reducing stock
+                        $removeQty = abs($diff);
+                        if ($product->shop_quantity_in_sales_unit < $removeQty) {
+                            throw new \Exception(
+                                "Cannot reduce quantity for \"{$product->name}\". Current stock: {$product->shop_quantity_in_sales_unit}, Reduce by: {$removeQty}"
+                            );
+                        }
+                        $product->decrement('shop_quantity_in_sales_unit', $removeQty);
+                        $this->deductBatchesFifo($product, $removeQty);
+
+                        ProductMovement::recordMovement(
+                            $pid, ProductMovement::TYPE_STOCK_ADDITION, -$removeQty,
+                            $stockEntry->entry_number . ' (edit)'
+                        );
+                    }
+                } else {
+                    // entry_type === 'deduction'
+                    if ($diff > 0) {
+                        // More deduction
+                        if ($product->shop_quantity_in_sales_unit < $diff) {
+                            throw new \Exception(
+                                "Insufficient stock for \"{$product->name}\". Available: {$product->shop_quantity_in_sales_unit}, Extra: {$diff}"
+                            );
+                        }
+                        $product->decrement('shop_quantity_in_sales_unit', $diff);
+                        $this->deductBatchesFifo($product, $diff);
+
+                        ProductMovement::recordMovement(
+                            $pid, ProductMovement::TYPE_STOCK_DEDUCTION, -$diff,
+                            $stockEntry->entry_number . ' (edit)'
+                        );
+                    } else {
+                        // Less deduction — restore stock
+                        $restoreQty  = abs($diff);
+                        $product->increment('shop_quantity_in_sales_unit', $restoreQty);
+                        $purchaseRestore = $this->convertSalesToPurchaseUnits($product, $restoreQty);
+
+                        $latestBatch = ProductAvailableQuantity::where('product_id', $pid)
+                            ->orderBy('created_at', 'desc')
+                            ->lockForUpdate()
+                            ->first();
+                        if ($latestBatch) {
+                            $latestBatch->increment('available_quantity', $purchaseRestore > 0 ? $purchaseRestore : $restoreQty);
+                        } else {
+                            ProductAvailableQuantity::create([
+                                'product_id'                => $pid,
+                                'batch_number'              => null,
+                                'available_quantity'        => $purchaseRestore > 0 ? $purchaseRestore : $restoreQty,
+                                'quantity_in_transfer_unit' => 0,
+                                'quantity_in_sales_unit'    => $restoreQty,
+                                'unit_id'                   => $product->sales_unit_id ?? $product->purchase_unit_id ?? null,
+                                'goods_received_note_id'    => null,
+                            ]);
+                        }
+
+                        ProductMovement::recordMovement(
+                            $pid, ProductMovement::TYPE_STOCK_DEDUCTION, $restoreQty,
+                            $stockEntry->entry_number . ' (edit)'
+                        );
+                    }
+                }
+            }
+
+            // Update header fields (entry_type and entry_number are immutable)
+            $stockEntry->update([
+                'invoice_number' => $validated['invoice_number'] ?? null,
+                'supplier_id'    => $validated['supplier_id'] ?? null,
+                'entry_date'     => $validated['entry_date'],
+                'remarks'        => $validated['remarks'] ?? null,
+            ]);
+
+            // Replace product lines
+            $stockEntry->products()->delete();
+            foreach ($validated['products'] as $line) {
+                StockEntryProduct::create([
+                    'stock_entry_id'   => $stockEntry->id,
+                    'product_id'       => (int) $line['product_id'],
+                    'quantity'         => (float) $line['quantity'],
+                    'purchase_price'   => !empty($line['purchase_price']) ? (float) $line['purchase_price'] : null,
+                    'is_opening_stock' => false,
+                    'notes'            => null,
+                ]);
+
+                if ($stockEntry->entry_type === 'addition' && !empty($line['purchase_price'])) {
+                    Product::where('id', $line['product_id'])
+                        ->update(['purchase_price' => (float) $line['purchase_price']]);
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->route('stock-entries.index')
+                ->with('success', 'Stock entry updated successfully.');
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => $e->getMessage()])->withInput();
+        }
+    }
+
     public function destroy(StockEntry $stockEntry)
     {
         $stockEntry->delete();
