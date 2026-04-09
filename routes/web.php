@@ -254,6 +254,7 @@ Route::middleware(['auth', 'role:0,1,2,3'])->group(function () {
     Route::get('/stock-entries', [StockEntryController::class, 'index'])->name('stock-entries.index');
     Route::post('/stock-entries', [StockEntryController::class, 'store'])->name('stock-entries.store');
     Route::get('/stock-entries/{stockEntry}/print', [StockEntryController::class, 'printInvoice'])->name('stock-entries.print');
+    Route::put('/stock-entries/{stockEntry}', [StockEntryController::class, 'update'])->name('stock-entries.update');
     Route::delete('/stock-entries/{stockEntry}', [StockEntryController::class, 'destroy'])->name('stock-entries.destroy');
 
     Route::get('/sales-history', [SaleController::class, 'salesHistory'])->name('sales.all');

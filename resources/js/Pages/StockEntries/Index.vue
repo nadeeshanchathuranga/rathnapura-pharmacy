@@ -22,6 +22,8 @@ const canChooseDivision = computed(() => [0, 1].includes(currentUserRole.value))
 
 // --- Form state ---
 const showForm = ref(false);
+const editingEntry = ref(null);
+const isEditing = computed(() => !!editingEntry.value);
 const submitting = ref(false);
 const errors = ref({});
 
@@ -51,7 +53,7 @@ const filteredProducts = computed(() => {
         .slice(0, 30);
 });
 
-const canCreateNew = computed(() => form.value.entry_type === 'addition' && searchQuery.value.trim().length >= 2);
+const canCreateNew = computed(() => !isEditing.value && form.value.entry_type === 'addition' && searchQuery.value.trim().length >= 2);
 
 function getDefaultDivisionId() {
     return currentUserDivisionId.value;
@@ -131,27 +133,42 @@ function submit() {
         ),
     };
 
-    router.post(route("stock-entries.store"), {
-        ...payload,
-        entry_type: form.value.entry_type,
-    }, {
-        onSuccess: (pageResponse) => {
-            showForm.value = false;
-            submitting.value = false;
+    if (isEditing.value) {
+        router.put(route('stock-entries.update', editingEntry.value.id), payload, {
+            onSuccess: () => {
+                showForm.value = false;
+                editingEntry.value = null;
+                submitting.value = false;
+            },
+            onError: (errs) => {
+                errors.value = errs;
+                submitting.value = false;
+            },
+        });
+    } else {
+        router.post(route("stock-entries.store"), {
+            ...payload,
+            entry_type: form.value.entry_type,
+        }, {
+            onSuccess: (pageResponse) => {
+                showForm.value = false;
+                submitting.value = false;
 
-            const printId = pageResponse?.props?.flash?.print_stock_entry_id;
-            if (printId) {
-                window.open(route('stock-entries.print', printId), '_blank');
-            }
-        },
-        onError: (errs) => {
-            errors.value = errs;
-            submitting.value = false;
-        },
-    });
+                const printId = pageResponse?.props?.flash?.print_stock_entry_id;
+                if (printId) {
+                    window.open(route('stock-entries.print', printId), '_blank');
+                }
+            },
+            onError: (errs) => {
+                errors.value = errs;
+                submitting.value = false;
+            },
+        });
+    }
 }
 
 function openForm() {
+    editingEntry.value = null;
     form.value = {
         entry_number: props.entryNumber,
         invoice_number: "",
@@ -163,6 +180,30 @@ function openForm() {
     };
     errors.value = {};
     searchQuery.value = "";
+    showForm.value = true;
+}
+
+function openEditForm(entry) {
+    editingEntry.value = entry;
+    form.value = {
+        entry_number: entry.entry_number,
+        invoice_number: entry.invoice_number ?? '',
+        supplier_id: entry.supplier?.id ? String(entry.supplier.id) : '',
+        entry_type: entry.entry_type,
+        entry_date: entry.entry_date ? String(entry.entry_date).slice(0, 10) : new Date().toISOString().slice(0, 10),
+        remarks: entry.remarks ?? '',
+        products: entry.products.map(p => ({
+            isNew: false,
+            product_id: p.product_id,
+            name: p.product?.name ?? 'Unknown',
+            barcode: p.product?.barcode ?? '',
+            current_stock: Number(p.product?.shop_quantity_in_sales_unit ?? 0),
+            quantity: String(parseFloat(p.quantity)),
+            purchase_price: p.purchase_price ?? '',
+        })),
+    };
+    errors.value = {};
+    searchQuery.value = '';
     showForm.value = true;
 }
 
@@ -221,27 +262,31 @@ watch(
                 class="bg-white rounded-xl border border-gray-200 shadow-sm mb-8 p-6"
             >
                 <h2 class="text-lg font-semibold text-gray-800 mb-5 border-b pb-3">
-                    New Stock Entry
+                    {{ isEditing ? 'Edit Stock Entry' : 'New Stock Entry' }}
                 </h2>
 
                 <!-- Stock In / Stock Out toggle -->
                 <div class="flex gap-3 mb-5">
                     <button
-                        @click="form.entry_type = 'addition'; form.products = []"
+                        @click="!isEditing && (form.entry_type = 'addition', form.products = [])"
+                        :disabled="isEditing"
                         :class="[
                             'flex-1 py-3 rounded-lg font-medium text-sm border-2 transition',
                             form.entry_type === 'addition'
                                 ? 'bg-green-600 text-white border-green-600'
                                 : 'bg-white text-gray-600 border-gray-200 hover:border-green-400',
+                            isEditing ? 'cursor-not-allowed opacity-70' : '',
                         ]"
                     >Stock In (Addition)</button>
                     <button
-                        @click="form.entry_type = 'deduction'; form.products = []"
+                        @click="!isEditing && (form.entry_type = 'deduction', form.products = [])"
+                        :disabled="isEditing"
                         :class="[
                             'flex-1 py-3 rounded-lg font-medium text-sm border-2 transition',
                             form.entry_type === 'deduction'
                                 ? 'bg-red-600 text-white border-red-600'
                                 : 'bg-white text-gray-600 border-gray-200 hover:border-red-400',
+                            isEditing ? 'cursor-not-allowed opacity-70' : '',
                         ]"
                     >Stock Out (Deduction)</button>
                 </div>
@@ -253,7 +298,8 @@ watch(
                         <input
                             v-model="form.entry_number"
                             type="text"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            :readonly="isEditing"
+                            :class="['w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none', isEditing ? 'bg-gray-100 cursor-not-allowed' : '']"
                         />
                         <p v-if="errors.entry_number" class="text-xs text-red-600 mt-1">{{ errors.entry_number }}</p>
                     </div>
@@ -502,8 +548,13 @@ watch(
                     >
                         <span v-if="submitting">Saving...</span>
                         <span v-else>
-                            {{ form.entry_type === 'addition' ? 'Confirm Stock In' : 'Confirm Stock Out' }}
-                            ({{ form.products.length }} product{{ form.products.length !== 1 ? "s" : "" }})
+                            <template v-if="isEditing">
+                                Save Changes ({{ form.products.length }} product{{ form.products.length !== 1 ? "s" : "" }})
+                            </template>
+                            <template v-else>
+                                {{ form.entry_type === 'addition' ? 'Confirm Stock In' : 'Confirm Stock Out' }}
+                                ({{ form.products.length }} product{{ form.products.length !== 1 ? "s" : "" }})
+                            </template>
                         </span>
                     </button>
                 </div>
@@ -566,6 +617,10 @@ watch(
                                         target="_blank"
                                         class="text-blue-500 hover:text-blue-700 text-xs transition mr-3"
                                     >Print Invoice</a>
+                                    <button
+                                        @click="openEditForm(entry)"
+                                        class="text-yellow-500 hover:text-yellow-700 text-xs transition mr-3"
+                                    >Edit</button>
                                     <button
                                         @click="deleteEntry(entry.id)"
                                         class="text-red-400 hover:text-red-600 text-xs transition"
