@@ -254,10 +254,11 @@
                                                 </td>
                                                 <td class="px-4 py-3 text-center">
                                                     <input type="number"
-                                                        :value="item.quantity === 1 ? '' : item.quantity"
-                                                        @input="updateQuantity(index, Number($event.target.value))"
+                                                        :value="item.quantity"
+                                                        @input="$event.target.value !== '' && updateQuantity(index, Number($event.target.value))"
+                                                        @blur="$event.target.value === '' && updateQuantity(index, 0)"
                                                         class="w-20 text-center font-semibold bg-white text-gray-800 border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                        min="1" step="1"  />
+                                                        min="1" step="1" />
                                                 </td>
                                                 <td class="px-4 py-3 text-right font-semibold text-green-600">
                                                     ({{ page.props.currency || "Rs." }})
@@ -1266,7 +1267,7 @@ const addByBarcode = () => {
                 product_name: product.name,
                 division_id: product.division_id ?? null,
                 price: parseFloat(price),
-                quantity: 1,
+                quantity: 0,
                 sale_unit: product.salesUnit ? product.salesUnit.name : 'Not found',
                 discount: product.discount
                     ? {
@@ -1605,7 +1606,7 @@ const addToCart = (product) => {
         product_name: product.name,
         division_id: product.division_id ?? null,
         price: parseFloat(price),
-        quantity: 1,
+        quantity: 0,
         sale_unit: product.salesUnit ? product.salesUnit.name : 'Not found',
         discount: product.discount
             ? {
@@ -1670,8 +1671,8 @@ const removeItemDiscount = (index) => {
 
 // Update quantity in cart
 const updateQuantity = (index, newQty) => {
-    const quantity = Number.isFinite(newQty) ? Math.floor(newQty) : 1;
-    form.items[index].quantity = quantity > 0 ? quantity : 1;
+    const quantity = Number.isFinite(newQty) ? Math.floor(newQty) : 0;
+    form.items[index].quantity = quantity >= 0 ? quantity : 0;
 };
 
 // Clear cart

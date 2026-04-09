@@ -92,7 +92,15 @@ class ProductController extends Controller
             $productQuery->where('division_id', $request->division_filter);
         }
 
-        $products = $productQuery->orderBy('id', 'desc')->paginate(10);
+        if ($request->filled('search')) {
+            $term = '%' . $request->search . '%';
+            $productQuery->where(function ($q) use ($term) {
+                $q->where('name', 'like', $term)
+                  ->orWhere('barcode', 'like', $term);
+            });
+        }
+
+        $products = $productQuery->orderBy('id', 'desc')->paginate(10)->withQueryString();
 
         // Load available quantities for each product from product_available_quantities table in FIFO order
         $availableQuantities = ProductAvailableQuantity::select('product_id', 'batch_number', 'available_quantity', 'unit_id', 'created_at')
@@ -131,6 +139,7 @@ class ProductController extends Controller
             'currencySymbol'=> $currencySymbol,
             'divisions'     => $divisions,
             'divisionFilter'=> $request->division_filter,
+            'searchQuery'   => $request->search ?? '',
             'brands'        => $brands,
             'categories'    => $categories,
             'types'         => $types,

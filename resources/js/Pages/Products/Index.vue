@@ -38,6 +38,32 @@
 
       <!-- Products Table Container -->
       <div class="bg-white rounded-2xl border border-gray-200 p-6">
+
+        <!-- Search Bar -->
+        <div class="mb-4 relative">
+          <span class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 0 5 11a6 6 0 0 0 12 0z" />
+            </svg>
+          </span>
+          <input
+            v-model="searchInput"
+            @input="doSearch(searchInput)"
+            type="text"
+            placeholder="Search by product name or barcode..."
+            class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          />
+          <button
+            v-if="searchInput"
+            @click="searchInput = ''; doSearch('')"
+            class="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+
         <table class="w-full text-left border-collapse">
           <!-- Table Header -->
           <thead>
@@ -301,15 +327,31 @@ defineProps({
   taxes:           { type: Array, default: () => [] },
   suppliers:       { type: Array, default: () => [] },
   customers:       { type: Array, default: () => [] },
+  searchQuery:     { type: String, default: '' },
 });
 
 const page = usePage();
 const isAdmin = computed(() => page.props.auth?.user?.role === 0 || page.props.auth?.user?.role === 1);
 const selectedDivisionFilter = ref(null);
 
+const searchInput = ref(page.props.searchQuery ?? '');
+let searchTimeout = null;
+
+function doSearch(value) {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        const params = {};
+        if (value) params.search = value;
+        if (selectedDivisionFilter.value) params.division_filter = selectedDivisionFilter.value;
+        router.get(route('products.index'), params, { preserveScroll: true });
+    }, 350);
+}
+
 const applyDivisionFilter = (divId) => {
   selectedDivisionFilter.value = divId;
-  router.get(route('products.index'), divId ? { division_filter: divId } : {}, { preserveScroll: true });
+  const params = divId ? { division_filter: divId } : {};
+  if (searchInput.value) params.search = searchInput.value;
+  router.get(route('products.index'), params, { preserveScroll: true });
 };
 
 /**
