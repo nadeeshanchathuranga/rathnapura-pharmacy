@@ -395,17 +395,19 @@
                                     </div>
                                 </div>
 
-              <!-- Payment Buttons -->
-              <div v-if="canAccessBillingActions" class="mt-6 grid grid-cols-2 gap-3">
-                <button
-                  @click="openPaymentModalForMethod(0)"
-                  data-shortcut="F4"
-ed="form.items.length === 0"
-                  class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-200 disabled:cursor-not-allowed text-white font-bold py-4 px-4 rounded-lg transition text-lg shadow-lg"
-                >
-                  💳 Card (F9)
-                </button>
-              </div>
+                                                                <!-- Payment Buttons -->
+                                                                <div v-if="canAccessBillingActions" class="mt-6 grid grid-cols-2 gap-3">
+                                                                        <button @click="openPaymentModalForMethod(0)" data-shortcut="F4"
+                                                                                :disabled="form.items.length === 0"
+                                                                                class="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-200 disabled:cursor-not-allowed text-white font-bold py-4 px-4 rounded-lg transition text-lg shadow-lg">
+                                                                                💵 Cash (F4)
+                                                                        </button>
+                                                                        <button @click="openPaymentModalForMethod(1)" data-shortcut="F9"
+                                                                                :disabled="form.items.length === 0"
+                                                                                class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-200 disabled:cursor-not-allowed text-white font-bold py-4 px-4 rounded-lg transition text-lg shadow-lg">
+                                                                                💳 Card (F9)
+                                                                        </button>
+                                                                </div>
 
                                 <!-- Submit Buttons: Paid / Unpaid -->
                                 <div v-if="canAccessBillingActions" class="mt-3 grid grid-cols-2 gap-3">
