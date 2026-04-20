@@ -22,7 +22,7 @@ class UserSeeder extends Seeder
         // Backoffice - Can manage products and GRNs
         User::firstOrCreate(
             ['email' => 'backoffice@gmail.com'],
-            ['name' => 'Backoffice', 'password' => 'TRSPRO1925', 'role' => 1]
+            ['name' => 'Backoffice', 'password' => 'RR202020', 'role' => 1]
         );
 
         // Cashier - access to all divisions
